@@ -12,8 +12,9 @@ const Header = () => {
   return (
     <HeaderContainer>
     <Nav>
-        <Logo to={ROUTES.HOME}>Todo App</Logo>
+        <Logo to={ROUTES.HOME}>우동마켓</Logo>
         <NavLinks>
+          <NavLinks to={ROUTES.HOME}></NavLinks>
         </NavLinks>
       </Nav>
     </HeaderContainer>

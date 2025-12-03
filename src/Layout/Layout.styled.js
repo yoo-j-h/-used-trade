@@ -7,8 +7,9 @@ export const LayoutContainer = styled.div`
 `
 
 export const HeaderContainer = styled.header`
+    padding: 0 15px;
     background: #ffffff;
-    padding: 0 24px;
+    
 `
 
 export const Nav = styled.nav`
@@ -23,11 +24,11 @@ export const Nav = styled.nav`
 export const Logo = styled(Link)`
     font-size: 24px;
     font-weight: 900;
-    color: #5833ffff;
+    color: #fd8b20ff;
     text-decoration: none;
 
     &:hover{
-        color: #3c16e4ff;
+        color: #db791dff;
         scale: 1.02;
     }
 `
@@ -48,12 +49,12 @@ export const NavLink = styled(Link)`
     font-weight: 600;
     
     &:hover{
-        color: #5833ffff;
+        color: #fd8b20ff;
         background: #f0f0f0;
     }
 
     &.active{
-        color: #5833ffff;
+        color: #fd8b20ff;
         background: #ffffff;
     }
 `
@@ -62,4 +63,5 @@ export const MainContent = styled.main`
     max-width: 1200px;
     margin: 0 auto;
     padding: 24px;
+    height : calc(100vh - 64px);
 `
