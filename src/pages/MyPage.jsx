@@ -1,4 +1,3 @@
-// src/pages/MyPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUsers } from '../context/UserContext';
@@ -19,7 +18,7 @@ import {
 } from './MyPage.styled';
 import { ROUTES } from '../routes/routePaths';
 
-// 🔹 Daum 우편번호(카카오 주소) 스크립트 로더
+
 let postcodeLoadPromise = null;
 
 const loadDaumPostcode = () => {
@@ -58,14 +57,13 @@ const MyPage = () => {
   const [address, setAddress] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
 
-  // 🔐 로그인 정보 변경용 상태
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newUserId, setNewUserId] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   const [credMessage, setCredMessage] = useState('');
 
-  // 로그인한 유저 정보로 초기값 세팅
   useEffect(() => {
     if (!currentUser) return;
     setName(currentUser.name || '');
@@ -89,7 +87,6 @@ const MyPage = () => {
     );
   }
 
-  // 🔹 기본 정보(이름/주소) 저장
   const handleSaveInfo = (e) => {
     e.preventDefault();
     setInfoMessage('');
@@ -107,13 +104,13 @@ const MyPage = () => {
     setInfoMessage('회원 정보가 저장되었습니다.');
   };
 
-  // 🔹 카카오(다음) 주소 검색 팝업
+  
   const handleSearchAddress = () => {
     loadDaumPostcode()
       .then(() => {
         new window.daum.Postcode({
           oncomplete: (data) => {
-            // 도로명 주소 또는 지번 주소
+      
             const fullAddress = data.roadAddress || data.jibunAddress;
             setAddress(fullAddress);
           },
@@ -125,7 +122,7 @@ const MyPage = () => {
       });
   };
 
-  // 🔹 아이디 / 비밀번호 변경
+
   const handleChangeCredentials = (e) => {
     e.preventDefault();
     setCredMessage('');
@@ -145,8 +142,8 @@ const MyPage = () => {
     const result = changeCredentials({
       currentUserId: currentUser.userId,
       currentPassword,
-      newUserId, // 비워두면 아이디 변경 없음
-      newPassword, // 비워두면 비밀번호 변경 없음
+      newUserId,
+      newPassword, 
     });
 
     if (!result.success) {
@@ -178,7 +175,7 @@ const MyPage = () => {
 
   return (
     <PageContainer>
-      {/* 1) 기본 정보 카드 */}
+
       <Card as="form" onSubmit={handleSaveInfo}>
         <Title>내 정보</Title>
 
@@ -223,7 +220,7 @@ const MyPage = () => {
         </ButtonRow>
       </Card>
 
-      {/* 2) 로그인 정보 변경 카드 */}
+
       <Card
         as="form"
         onSubmit={handleChangeCredentials}

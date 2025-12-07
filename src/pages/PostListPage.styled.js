@@ -1,4 +1,3 @@
-// src/pages/PostListPage.styled.js
 import styled from "styled-components";
 
 export const PageContainer = styled.div`

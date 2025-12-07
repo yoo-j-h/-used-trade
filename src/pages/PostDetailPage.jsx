@@ -48,17 +48,18 @@ const PostDetailPage = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
 
-  const numericPostId = Number(postId); // postId는 Date.now()로 만든 숫자라고 가정
+  const numericPostId = Number(postId);
   const { getPostById, updatePost } = usePosts();
-  const { currentUser } = useUsers();
+  const { currentUser, getUserById } = useUsers();
   const { getCommentsByPostId, addComment, deleteComment } = useComments();
 
   const post = getPostById(numericPostId);
   const comments = getCommentsByPostId(numericPostId) || [];
 
+  const seller = post ? getUserById(post.sellerId) : null;
+
   const isOwner = post && currentUser && currentUser.userId === post.sellerId;
 
-  // 게시글 수정용 상태
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(post?.title || '');
   const [editPrice, setEditPrice] = useState(post?.price || '');
@@ -67,14 +68,11 @@ const PostDetailPage = () => {
   const [editRegion, setEditRegion] = useState(post?.region || '');
   const [editDescription, setEditDescription] = useState(post?.description || '');
 
-  // 최상위 댓글
   const [commentContent, setCommentContent] = useState('');
 
-  // 답글
   const [replyParentId, setReplyParentId] = useState(null);
   const [replyContent, setReplyContent] = useState('');
 
-  // 댓글/답글 트리 구조 만들기
   const commentTree = useMemo(() => {
     const roots = comments.filter((c) => !c.parentId);
     const replyMap = {};
@@ -95,7 +93,6 @@ const PostDetailPage = () => {
     );
   }
 
-  // 🔹 게시글 전체 수정 저장
   const handleSaveEdit = (e) => {
     e.preventDefault();
 
@@ -131,10 +128,8 @@ const PostDetailPage = () => {
   const handleChangeStatus = (nextStatus) => {
     if (!isOwner) return;
 
-
     updatePost(post.postId, { status: nextStatus });
   };
-
 
   const handleAddRootComment = (e) => {
     e.preventDefault();
@@ -155,7 +150,6 @@ const PostDetailPage = () => {
     setCommentContent('');
   };
 
-
   const handleAddReply = (e, parentId) => {
     e.preventDefault();
     if (!currentUser) {
@@ -175,7 +169,6 @@ const PostDetailPage = () => {
     setReplyContent('');
     setReplyParentId(null);
   };
-
 
   const handleDeleteComment = (commentId, commentUserId) => {
     if (!currentUser || currentUser.userId !== commentUserId) {
@@ -212,6 +205,13 @@ const PostDetailPage = () => {
 
         <InfoBox>
           <Title>{post.title}</Title>
+
+          <MetaRow>
+            <RegionText>
+              게시자: {seller && seller.userId ? seller.userId : '알 수 없음'}
+            </RegionText>
+          </MetaRow>
+
           <Price>{post.price?.toLocaleString?.() ?? post.price}원</Price>
 
           <MetaRow>
@@ -309,10 +309,8 @@ const PostDetailPage = () => {
         </>
       )}
 
-
       <SectionTitle>댓글</SectionTitle>
       <CommentSection>
-
         <CommentForm onSubmit={handleAddRootComment}>
           <CommentTextarea
             rows={3}
@@ -332,7 +330,6 @@ const PostDetailPage = () => {
           </ButtonRow>
         </CommentForm>
 
-        {/* 댓글 + 답글 리스트 */}
         <CommentList>
           {commentTree.roots.length === 0 ? (
             <EmptyMessage>아직 댓글이 없습니다.</EmptyMessage>
@@ -375,7 +372,6 @@ const PostDetailPage = () => {
                   <CommentContent>{c.content}</CommentContent>
                 </CommentItem>
 
-                {/* 이 댓글에 달리는 답글 작성 폼 */}
                 {replyParentId === c.commentId && (
                   <ReplyForm onSubmit={(e) => handleAddReply(e, c.commentId)}>
                     <ReplyTextarea
@@ -399,7 +395,6 @@ const PostDetailPage = () => {
                   </ReplyForm>
                 )}
 
-                {/* 이 댓글의 답글 목록 */}
                 {commentTree.replyMap[c.commentId] &&
                   commentTree.replyMap[c.commentId].map((r) => (
                     <CommentItem key={r.commentId} $isReply>

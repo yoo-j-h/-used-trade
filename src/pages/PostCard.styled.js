@@ -122,7 +122,7 @@ export const StatusBadge = styled.span`
         color: #e67700;
       `;
     }
-    // 기본: 판매중
+
     return `
       background-color: #d3f9d8;
       color: #2b8a3e;

@@ -16,13 +16,13 @@ import { ROUTES } from '../routes/routePaths';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  // 🔥 users 대신 login 함수만 받아온다
+
   const { login } = useUsers();
 
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
 
-  // 🔹 로그인 처리
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -31,7 +31,6 @@ const LoginPage = () => {
       return;
     }
 
-    // 🔥 Context에 있는 login() 사용
     const user = login(userId, password);
 
     if (!user) {
@@ -40,7 +39,7 @@ const LoginPage = () => {
     }
 
     alert(`${user.name}님, 환영합니다!`);
-    navigate(ROUTES.HOME); // 로그인 성공 후 메인 페이지로 이동
+    navigate(ROUTES.HOME); 
   };
 
   return (

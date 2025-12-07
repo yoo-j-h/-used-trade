@@ -113,7 +113,7 @@ export const HelpText = styled.p`
   margin: 0;
 `;
 
-// 🔽 새로 추가되는 부분들
+
 
 export const ImageUploadWrapper = styled.div`
   display: flex;

@@ -1,4 +1,3 @@
-// src/pages/MyPage.styled.js
 import styled from 'styled-components';
 
 export const PageContainer = styled.div`
@@ -96,7 +95,6 @@ export const HelpText = styled.p`
   margin: 4px 0 8px;
 `;
 
-/* 🔹 추가: 주소 입력 행 (인풋 + 버튼 나란히) */
 export const AddressRow = styled.div`
   display: flex;
   gap: 8px;
@@ -107,7 +105,6 @@ export const AddressRow = styled.div`
   }
 `;
 
-/* 🔹 추가: 주소 검색 버튼 */
 export const AddressSearchButton = styled.button`
   border: none;
   border-radius: 999px;

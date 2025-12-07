@@ -1,4 +1,3 @@
-// src/components/PostCard.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -45,7 +44,6 @@ const PostCard = ({ post }) => {
           </Thumbnail>
         )}
 
-        {/* 🔥 상태가 예약중/판매완료이면 썸네일 전체 덮기 */}
         {showOverlay && <StatusOverlay $status={post.status}>{post.status}</StatusOverlay>}
       </ThumbnailWrapper>
 
