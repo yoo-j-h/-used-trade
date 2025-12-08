@@ -49,13 +49,14 @@ const PostDetailPage = () => {
   const navigate = useNavigate();
 
   const numericPostId = Number(postId);
-  const { getPostById, updatePost } = usePosts();
+  const { getPostById, updatePost, deletePost } = usePosts(); // 🔹 deletePost 추가
   const { currentUser, getUserById } = useUsers();
   const { getCommentsByPostId, addComment, deleteComment } = useComments();
 
   const post = getPostById(numericPostId);
   const comments = getCommentsByPostId(numericPostId) || [];
 
+  // 🔹 게시자(판매자) 정보
   const seller = post ? getUserById(post.sellerId) : null;
 
   const isOwner = post && currentUser && currentUser.userId === post.sellerId;
@@ -127,8 +128,19 @@ const PostDetailPage = () => {
 
   const handleChangeStatus = (nextStatus) => {
     if (!isOwner) return;
-
     updatePost(post.postId, { status: nextStatus });
+  };
+
+  // 🔹 게시글 삭제
+  const handleDeletePost = () => {
+    if (!isOwner) return;
+
+    const ok = window.confirm('정말 이 게시글을 삭제하시겠습니까?');
+    if (!ok) return;
+
+    deletePost(post.postId);
+    alert('게시글이 삭제되었습니다.');
+    navigate('/'); // 홈이나 목록 페이지 경로에 맞게 수정 가능
   };
 
   const handleAddRootComment = (e) => {
@@ -206,6 +218,7 @@ const PostDetailPage = () => {
         <InfoBox>
           <Title>{post.title}</Title>
 
+          {/* 🔹 게시자 아이디만 표시 */}
           <MetaRow>
             <RegionText>
               게시자: {seller && seller.userId ? seller.userId : '알 수 없음'}
@@ -242,8 +255,11 @@ const PostDetailPage = () => {
 
           {isOwner && (
             <ButtonRow style={{ marginTop: '12px' }}>
+              <SecondaryButton type="button" onClick={handleDeletePost}>
+                삭제하기
+              </SecondaryButton>
               <PrimaryButton type="button" onClick={() => setIsEditing(true)}>
-                게시글 수정하기
+                수정하기
               </PrimaryButton>
             </ButtonRow>
           )}

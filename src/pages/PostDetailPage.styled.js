@@ -184,7 +184,7 @@ export const PrimaryButton = styled(BaseButton)`
 `;
 
 export const SecondaryButton = styled(BaseButton)`
-  background-color: #f1f3f5;
+  background-color: #ff6060ff;
   color: #495057;
 
   &:hover {
