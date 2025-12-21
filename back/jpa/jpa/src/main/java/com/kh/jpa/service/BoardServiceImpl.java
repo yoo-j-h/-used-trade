@@ -1,8 +1,11 @@
 package com.kh.jpa.service;
 
 import com.kh.jpa.dto.BoardDto;
+import com.kh.jpa.dto.ReplyDto;
 import com.kh.jpa.entity.Board;
 import com.kh.jpa.entity.Member;
+import com.kh.jpa.entity.Reply;
+import com.kh.jpa.enums.CommonEnums;
 import com.kh.jpa.repository.BoardRepository;
 import com.kh.jpa.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -11,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +52,8 @@ public class BoardServiceImpl implements BoardService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
 
+        List<ReplyDto.Response> replies = toReplyResponses(board);
+
         return BoardDto.Response.of(
                 board.getBoardId(),
                 board.getBoardTitle(),
@@ -59,7 +66,8 @@ public class BoardServiceImpl implements BoardService {
                 board.getCount(),
                 board.getMember().getUserId(),
                 board.getMember().getUserName(),
-                board.getCreateDate()
+                board.getCreateDate(),
+                replies
         );
     }
 
@@ -95,6 +103,8 @@ public class BoardServiceImpl implements BoardService {
                 updateDto.getImage_url()
         );
 
+        List<ReplyDto.Response> replies = toReplyResponses(board);
+
         return BoardDto.Response.of(
                 board.getBoardId(),
                 board.getBoardTitle(),
@@ -107,7 +117,8 @@ public class BoardServiceImpl implements BoardService {
                 board.getCount(),
                 board.getMember().getUserId(),
                 board.getMember().getUserName(),
-                board.getCreateDate()
+                board.getCreateDate(),
+                replies
         );
     }
 
@@ -119,4 +130,25 @@ public class BoardServiceImpl implements BoardService {
 
         boardRepository.delete(board);
     }
+
+    private List<ReplyDto.Response> toReplyResponses(Board board) {
+        if (board.getReplies() == null) return List.of();
+
+        return board.getReplies().stream()
+                .filter(reply -> reply.getStatus() == CommonEnums.Status.Y)
+                .map(this::toReplyResponse)
+                .toList();
+    }
+
+    private ReplyDto.Response toReplyResponse(Reply reply) {
+        return ReplyDto.Response.of(
+                reply.getReplyNo(),
+                reply.getReplyContent(),
+                reply.getBoard().getBoardId(),  
+                reply.getMember().getUserId(),
+                reply.getMember().getUserName(),
+                reply.getCreateDate()
+        );
+    }
+
 }

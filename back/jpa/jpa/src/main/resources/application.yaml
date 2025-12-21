@@ -4,7 +4,7 @@ spring:
 
   datasource:
     hikari:
-      jdbc-url: jdbc:h2:tcp://localhost/C:\workspace\07_RestServer\jpa/tdb
+      jdbc-url: jdbc:h2:tcp://localhost/E:\workspace2\Used trade\back\db\tdb
       driver-class-name: org.h2.Driver
       username: sa
       password: 1234

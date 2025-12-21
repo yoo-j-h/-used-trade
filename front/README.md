@@ -1,16 +1,152 @@
-# React + Vite
+# 🛒 우동마켓(Udong Market)
+React + IndexedDB 기반의 로컬 중고거래 서비스
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+우동마켓은 사용자가 회원가입부터 게시글 등록, 댓글, 대댓글,  
+주소 검색 **실제 중고거래 서비스와 동일한 흐름**을 경험할 수 있도록 설계된 웹 애플리케이션입니다.  
+백엔드 서버 없이도 **IndexedDB(Local DB)** 를 활용해 완전한 CRUD 기능을 구현했습니다.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📚 목차
+- [프로젝트 소개](#-프로젝트-소개)
+- [주요 기능](#-주요-기능)
+- [기술 스택](#-기술-스택)
+- [프로젝트 구조](#-프로젝트-구조)
+- [설계 철학](#-설계-철학)
+- [IndexedDB 사용 이유](#-indexeddb-사용-이유)
+- [카카오 주소/지도 API](#-카카오-주소지도-api)
+- [실행 방법](#-실행-방법)
+- [향후 확장 계획](#-향후-확장-계획)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📝 프로젝트 소개
 
-## Expanding the ESLint configuration
+우동마켓은 **React Context API + IndexedDB** 를 기반으로 개발된  
+중고거래 플랫폼입니다.  
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+서버가 없는 환경에서도:
+- 로그인 / 회원정보 수정  
+- 게시글 CRUD  
+- 댓글 / 대댓글  
+- 이미지 업로드  
+- 카카오 주소 검색  
+
+까지 모두 동작하는 것이 특징입니다.
+
+---
+
+## ✨ 주요 기능
+
+### 👤 회원 기능
+- 회원가입 / 로그인 / 로그아웃
+- 마이페이지 (회원정보 수정)
+- 비밀번호 변경
+- 카카오 주소 API를 통한 주소 변경
+- 회원 탈퇴
+
+---
+
+### 🛒 게시글 기능
+- 게시글 작성(이미지 업로드 Base64 처리)
+- 게시글 수정 / 삭제 (게시자 본인만)
+- 게시글 상태 변경 (판매중 / 예약중 / 판매완료)
+- 카테고리별 필터링 기능
+- 검색 기능 (제목 검색)
+- 게시자 정보(아이디) 표시
+
+
+---
+
+### 💬 댓글/대댓글 기능
+- 댓글 작성 · 삭제
+- 대댓글(답글) 작성
+- 댓글 트리 구조 자동 정렬
+- 작성자 본인만 삭제 가능
+
+---
+
+## 🛠 기술 스택
+
+### Frontend
+- React
+- React Router
+- Styled-components
+- JavaScript
+
+### Local DB
+- IndexedDB (사용자/게시글/댓글 저장)
+
+### 외부 API
+- **카카오 주소 검색 API (daum.Postcode)**
+
+---
+
+## 📁 프로젝트 구조
+
+src/
+├── components/ # UI 컴포넌트(PostCard 등)
+├── context/ # User, Post, Comments 상태관리 + IndexedDB 연동
+├── pages/ # 각 페이지 화면
+├── routes/ # 라우터 설정
+├── styles/ # 공통 스타일
+└── App.jsx
+
+yaml
+코드 복사
+
+---
+
+## 🧱 설계 철학
+
+### 1) Context API 기반의 명확한 책임 분리  
+- UserContext: 회원/인증 관리  
+- PostContext: 게시글 CRUD  
+- CommentsContext: 댓글/대댓글 관리  
+
+### 2) 컴포넌트 재사용성 극대화  
+- PostCard, CommentItem 등 UI 컴포넌트화  
+- 유지보수 및 확장성을 고려한 설계
+
+### 3) 서버 없이도 완전한 CRUD  
+IndexedDB를 사용하여 실제 서비스처럼 모든 기능을 로컬에서 수행 가능.
+
+---
+
+## 🗃 IndexedDB 사용 이유
+
+### 📌 IndexedDB란?
+브라우저 내장 **비동기형 Key-Value 기반 NoSQL 데이터베이스**  
+대용량 데이터 저장이 가능하며, 객체/이미지까지 저장할 수 있다.
+
+### ✔ IndexedDB 장점
+- LocalStorage 대비 **대용량 저장 가능(수백MB~GB)**  
+- **비동기 처리**로 성능 우수  
+- JSON 객체 그대로 저장  
+- 인덱스 기반 빠른 검색 지원  
+- 오프라인 웹앱(PWA)에 최적화  
+
+### ✔ LocalStorage와 비교
+| 항목 | IndexedDB | LocalStorage |
+|------|------------|--------------|
+| 데이터 용량 | 매우 크다 | 약 5MB 제한 |
+| 저장 형태 | 객체, 파일 등 | 문자열만 |
+| 처리 방식 | 💡 비동기 | ⚠️ 동기(느리고 UI 멈춤 가능) |
+| 검색 성능 | 인덱스 지원 | 단순 문자열 |
+| 적합한 용도 | 게시글/댓글/이미지 | 간단한 설정값 |
+
+---
+
+## 🗺 카카오 주소 API
+
+### 📌 사용 목적
+- 거래 지역을 정확하게 입력하기위해서
+
+### ✔ 동작 흐름  
+1. 게시글 작성 시 → daum.Postcode로 주소 검색  
+2. 주소 문자열 저장 (예: "서울 강남구 역삼동")
+
+
+### 나중에 추가하고 싶은것들
+1. 카카오맵과 연동하여 지도로 주소 핑 찍기
+2. 검색 기능
