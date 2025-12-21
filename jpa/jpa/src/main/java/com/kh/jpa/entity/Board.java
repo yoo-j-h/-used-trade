@@ -55,20 +55,13 @@ public class Board extends BaseTimeEntity {
         }
     }
 
-    public void changeImageUrl(String imageUrl) {
-        if (imageUrl != null) this.imageUrl = imageUrl;
-    }
-
-    public void increaseCount() {
-        this.count = (this.count == null) ? 1 : this.count + 1;
-    }
-
     public void patchUpdate(String boardTitle, String boardContent, String category,
-                            Integer price, String saleStatus) {
+                            Integer price, String saleStatus, String imageUrl) {
         if (boardTitle != null) this.boardTitle = boardTitle;
         if (boardContent != null) this.boardContent = boardContent;
         if (category != null) this.category = category;
         if (price != null) this.price = price;
         if (saleStatus != null) this.saleStatus = saleStatus;
+        if (imageUrl != null) this.imageUrl = imageUrl;
     }
 }

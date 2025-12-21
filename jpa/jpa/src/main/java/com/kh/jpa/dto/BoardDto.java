@@ -4,7 +4,6 @@ import com.kh.jpa.entity.Board;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -20,16 +19,17 @@ public class BoardDto {
         private String region;
         private Integer price;
         private String sale_status;
-        private MultipartFile file;
+        private String image_url;
 
-        public Board toEntity() {
+        public Board toEntity(String resolvedRegion, String resolvedSaleStatus) {
             return Board.builder()
                     .boardTitle(board_title)
                     .boardContent(board_content)
                     .category(category)
-                    .region(region)
+                    .region(resolvedRegion)
                     .price(price)
-                    .saleStatus(sale_status)
+                    .saleStatus(resolvedSaleStatus)
+                    .imageUrl(image_url)
                     .build();
         }
     }
@@ -42,7 +42,7 @@ public class BoardDto {
         private String category;
         private Integer price;
         private String sale_status;
-        private MultipartFile file;
+        private String image_url;
     }
 
     @Getter

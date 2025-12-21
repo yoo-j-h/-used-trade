@@ -1,4 +1,3 @@
-// src/main/java/com/kh/jpa/controller/BoardController.java
 package com.kh.jpa.controller;
 
 import com.kh.jpa.dto.BoardDto;
@@ -12,8 +11,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-
 @RestController
 @RequestMapping("/api/board")
 @RequiredArgsConstructor
@@ -22,7 +19,7 @@ public class BoardController {
     private final BoardService boardService;
 
     @PostMapping
-    public ResponseEntity<Long> createBoard(@ModelAttribute BoardDto.Create createBoardDto) throws IOException {
+    public ResponseEntity<Long> createBoard(@RequestBody BoardDto.Create createBoardDto) {
         Long boardId = boardService.createBoard(createBoardDto);
         return ResponseEntity.ok(boardId);
     }
@@ -42,8 +39,8 @@ public class BoardController {
     @PatchMapping("/{boardId}")
     public ResponseEntity<BoardDto.Response> updateBoard(
             @PathVariable("boardId") Long boardId,
-            @ModelAttribute BoardDto.Update updateBoardDto
-    ) throws IOException {
+            @RequestBody BoardDto.Update updateBoardDto
+    ) {
         return ResponseEntity.ok(boardService.updateBoard(boardId, updateBoardDto));
     }
 

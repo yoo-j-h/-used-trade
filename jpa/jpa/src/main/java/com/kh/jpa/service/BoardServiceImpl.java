@@ -12,10 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,47 +20,32 @@ public class BoardServiceImpl implements BoardService {
     private final MemberRepository memberRepository;
     private final BoardRepository boardRepository;
 
-    private static final String UPLOAD_DIR = "uploads" + File.separator;
-
     @Override
     @Transactional
-    public Long createBoard(BoardDto.Create createDto) throws IOException {
+    public Long createBoard(BoardDto.Create createDto) {
 
         Member member = memberRepository.findById(createDto.getUser_id())
                 .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다"));
 
-        String saleStatus = (createDto.getSale_status() == null || createDto.getSale_status().isBlank())
+        String resolvedRegion = (createDto.getRegion() == null || createDto.getRegion().isBlank())
+                ? member.getAddress()
+                : createDto.getRegion();
+
+        String resolvedSaleStatus = (createDto.getSale_status() == null || createDto.getSale_status().isBlank())
                 ? "판매중"
                 : createDto.getSale_status();
 
-        String imageUrl = null;
-        if (createDto.getFile() != null && !createDto.getFile().isEmpty()) {
-            String originName = createDto.getFile().getOriginalFilename();
-            String changeName = UUID.randomUUID() + "_" + originName;
-
-            File dir = new File(UPLOAD_DIR);
-            if (!dir.exists()) dir.mkdirs();
-
-            createDto.getFile().transferTo(new File(UPLOAD_DIR + changeName));
-            imageUrl = "/images/" + changeName;
-        }
-
-        Board board = createDto.toEntity();
-        board.patchUpdate(null, null, null, null, saleStatus);
+        Board board = createDto.toEntity(resolvedRegion, resolvedSaleStatus);
         board.changeMember(member);
-        board.changeImageUrl(imageUrl);
 
         boardRepository.save(board);
         return board.getBoardId();
     }
 
     @Override
-    @Transactional
     public BoardDto.Response getBoardDetail(Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
-
-        board.increaseCount();
 
         return BoardDto.Response.of(
                 board.getBoardId(),
@@ -101,7 +82,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public BoardDto.Response updateBoard(Long boardId, BoardDto.Update updateDto) throws IOException {
+    public BoardDto.Response updateBoard(Long boardId, BoardDto.Update updateDto) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
 
@@ -110,19 +91,9 @@ public class BoardServiceImpl implements BoardService {
                 updateDto.getBoard_content(),
                 updateDto.getCategory(),
                 updateDto.getPrice(),
-                updateDto.getSale_status()
+                updateDto.getSale_status(),
+                updateDto.getImage_url()
         );
-
-        if (updateDto.getFile() != null && !updateDto.getFile().isEmpty()) {
-            String originName = updateDto.getFile().getOriginalFilename();
-            String changeName = UUID.randomUUID() + "_" + originName;
-
-            File dir = new File(UPLOAD_DIR);
-            if (!dir.exists()) dir.mkdirs();
-
-            updateDto.getFile().transferTo(new File(UPLOAD_DIR + changeName));
-            board.changeImageUrl("/images/" + changeName);
-        }
 
         return BoardDto.Response.of(
                 board.getBoardId(),
