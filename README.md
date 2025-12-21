@@ -86,48 +86,50 @@ API는 **DTO 기반 설계(Entity 직접 반환 금지)** 원칙을 따릅니다
 
 ## 📁 프로젝트 구조
 
+```text
 udongmarket-rest/
 ├── backend/
-│ ├── src/main/java/com/kh/jpa/
-│ │ ├── controller/
-│ │ │ ├── MemberController.java
-│ │ │ ├── BoardController.java
-│ │ │ └── ReplyController.java
-│ │ ├── service/
-│ │ │ ├── MemberService.java
-│ │ │ ├── MemberServiceImpl.java
-│ │ │ ├── BoardService.java
-│ │ │ ├── BoardServiceImpl.java
-│ │ │ ├── ReplyService.java
-│ │ │ └── ReplyServiceImpl.java
-│ │ ├── repository/
-│ │ │ ├── MemberRepository.java
-│ │ │ ├── MemberRepositoryImpl.java
-│ │ │ ├── BoardRepository.java
-│ │ │ └── BoardRepositoryImpl.java
-│ │ ├── entity/
-│ │ │ ├── BaseTimeEntity.java
-│ │ │ ├── Member.java
-│ │ │ ├── Profile.java
-│ │ │ ├── Board.java
-│ │ │ └── Reply.java
-│ │ ├── dto/
-│ │ │ ├── MemberDto.java
-│ │ │ ├── BoardDto.java
-│ │ │ ├── ReplyDto.java
-│ │ │ └── PageResponse.java
-│ │ ├── enums/
-│ │ │ └── CommonEnums.java
-│ │ └── JpaApplication.java
-│ └── src/main/resources/
-│ └── application.yml
+│   ├── src/main/java/com/kh/jpa/
+│   │   ├── controller/
+│   │   │   ├── MemberController.java
+│   │   │   ├── BoardController.java
+│   │   │   └── ReplyController.java
+│   │   ├── service/
+│   │   │   ├── MemberService.java
+│   │   │   ├── MemberServiceImpl.java
+│   │   │   ├── BoardService.java
+│   │   │   ├── BoardServiceImpl.java
+│   │   │   ├── ReplyService.java
+│   │   │   └── ReplyServiceImpl.java
+│   │   ├── repository/
+│   │   │   ├── MemberRepository.java
+│   │   │   ├── MemberRepositoryImpl.java
+│   │   │   ├── BoardRepository.java
+│   │   │   └── BoardRepositoryImpl.java
+│   │   ├── entity/
+│   │   │   ├── BaseTimeEntity.java
+│   │   │   ├── Member.java
+│   │   │   ├── Profile.java
+│   │   │   ├── Board.java
+│   │   │   └── Reply.java
+│   │   ├── dto/
+│   │   │   ├── MemberDto.java
+│   │   │   ├── BoardDto.java
+│   │   │   ├── ReplyDto.java
+│   │   │   └── PageResponse.java
+│   │   ├── enums/
+│   │   │   └── CommonEnums.java
+│   │   └── JpaApplication.java
+│   └── src/main/resources/
+│       └── application.yml
 │
 ├── frontend/
-│ ├── src/
-│ ├── package.json
-│ └── vite.config.js
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.js
 │
 └── README.md
+
 
 yaml
 코드 복사
