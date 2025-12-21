@@ -1,152 +1,174 @@
 # 🛒 우동마켓(Udong Market)
-React + IndexedDB 기반의 로컬 중고거래 서비스
+React + Spring Boot(JPA) 기반의 REST 중고거래 서비스
 
-우동마켓은 사용자가 회원가입부터 게시글 등록, 댓글, 대댓글,  
-주소 검색 **실제 중고거래 서비스와 동일한 흐름**을 경험할 수 있도록 설계된 웹 애플리케이션입니다.  
-백엔드 서버 없이도 **IndexedDB(Local DB)** 를 활용해 완전한 CRUD 기능을 구현했습니다.
+우동마켓은 사용자가 **회원가입 → 게시글(상품) 등록 → 댓글 작성**까지  
+**실제 중고거래 서비스와 동일한 흐름**을 경험할 수 있도록 설계된 웹 애플리케이션입니다.  
+프론트엔드는 React, 백엔드는 Spring Boot 기반 **REST API 서버**로 구현했으며,  
+API는 **DTO 기반 설계(Entity 직접 반환 금지)** 원칙을 따릅니다.
 
 ---
 
 ## 📚 목차
 - [프로젝트 소개](#-프로젝트-소개)
-- [주요 기능](#-주요-기능)
 - [기술 스택](#-기술-스택)
-- [프로젝트 구조](#-프로젝트-구조)
-- [설계 철학](#-설계-철학)
-- [IndexedDB 사용 이유](#-indexeddb-사용-이유)
-- [카카오 주소/지도 API](#-카카오-주소지도-api)
+- [주요 도메인 설명](#-주요-도메인-설명)
+- [API 명세](#-api-명세)
 - [실행 방법](#-실행-방법)
-- [향후 확장 계획](#-향후-확장-계획)
 
 ---
 
 ## 📝 프로젝트 소개
 
-우동마켓은 **React Context API + IndexedDB** 를 기반으로 개발된  
-중고거래 플랫폼입니다.  
+우동마켓은 React 과제에서 필요한 기능을 백엔드에서 제공하는 **REST API 서버**로 구현한 중고거래 플랫폼입니다.
 
-서버가 없는 환경에서도:
-- 로그인 / 회원정보 수정  
-- 게시글 CRUD  
-- 댓글 / 대댓글  
-- 이미지 업로드  
-- 카카오 주소 검색  
-
-까지 모두 동작하는 것이 특징입니다.
-
----
-
-## ✨ 주요 기능
-
-### 👤 회원 기능
-- 회원가입 / 로그인 / 로그아웃
-- 마이페이지 (회원정보 수정)
-- 비밀번호 변경
-- 카카오 주소 API를 통한 주소 변경
-- 회원 탈퇴
-
----
-
-### 🛒 게시글 기능
-- 게시글 작성(이미지 업로드 Base64 처리)
-- 게시글 수정 / 삭제 (게시자 본인만)
-- 게시글 상태 변경 (판매중 / 예약중 / 판매완료)
-- 카테고리별 필터링 기능
-- 검색 기능 (제목 검색)
-- 게시자 정보(아이디) 표시
-
-
----
-
-### 💬 댓글/대댓글 기능
-- 댓글 작성 · 삭제
-- 대댓글(답글) 작성
-- 댓글 트리 구조 자동 정렬
-- 작성자 본인만 삭제 가능
+- **JPA + JPQL(EntityManager)** 기반 CRUD 구현
+- HTTP 메서드/URI/응답 구조를 직접 설계하여 REST 감각 학습
+- **Entity 직접 반환 금지**, DTO 기반 API 설계 적용
 
 ---
 
 ## 🛠 기술 스택
 
+### Backend
+- Spring Boot 3.x
+- Spring Web
+- JPA (EntityManager + JPQL)
+- H2 Database
+- Lombok
+- Java 17
+
 ### Frontend
 - React
 - React Router
 - Styled-components
-- JavaScript
-
-### Local DB
-- IndexedDB (사용자/게시글/댓글 저장)
-
-### 외부 API
-- **카카오 주소 검색 API (daum.Postcode)**
+- Axios
+- Vite
 
 ---
 
-## 📁 프로젝트 구조
+## 🧩 주요 도메인 설명
 
-src/
-├── components/ # UI 컴포넌트(PostCard 등)
-├── context/ # User, Post, Comments 상태관리 + IndexedDB 연동
-├── pages/ # 각 페이지 화면
-├── routes/ # 라우터 설정
-├── styles/ # 공통 스타일
-└── App.jsx
+- **Member(회원)**: 가입/조회/수정/삭제(소프트 삭제)
+- **Board(게시글/상품)**: 상품 정보 등록/조회/수정/삭제
+- **Reply(댓글)**: 게시글에 대한 댓글 CRUD (삭제는 소프트 삭제)
+- **Profile(프로필)**: 회원의 프로필 정보(1:1)
 
-yaml
+### 연관관계
+- Member : Board = 1 : N
+- Board : Reply = 1 : N
+- Member : Reply = 1 : N
+- Member : Profile = 1 : 1
+
+### 삭제 정책
+- Member: 소프트 삭제(`status = N`), 조회 시 `status = Y`만 노출
+- Board: 하드 삭제
+- Reply: 소프트 삭제(`status = N`), 조회 시 `status = Y`만 노출
+
+---
+
+## 📌 API 명세
+
+> Base URL: `http://localhost:8888`
+
+### 1) Member API (`/api/member`)
+
+| Method | URL | 설명 |
+|---|---|---|
+| POST | `/api/member` | 회원가입 |
+| GET | `/api/member` | 회원 전체 조회 (status=Y) |
+| GET | `/api/member/{userId}` | 회원 단건 조회 (status=Y) |
+| PUT | `/api/member/{userId}` | 회원 정보 수정 |
+| DELETE | `/api/member/{userId}` | 회원 삭제 (소프트 삭제) |
+| GET | `/api/member/search?keyword={keyword}` | 회원 이름 검색 (status=Y) |
+
+#### 회원가입 예시
+**Request**
+json
+{
+  "user_id": "user01",
+  "user_pwd": "1234",
+  "user_name": "홍길동",
+  "email": "user01@test.com",
+  "phone": "010-1234-5678",
+  "address": "서울 강남구 역삼동"
+}
+Response (200 OK)
+
+json
 코드 복사
+"user01"
+2) Board API (/api/board)
+Method	URL	설명
+POST	/api/board	게시글 등록
+GET	/api/board	게시글 목록 조회 (Page)
+GET	/api/board/{boardId}	게시글 상세 조회 (댓글 포함)
+PATCH	/api/board/{boardId}	게시글 수정
+DELETE	/api/board/{boardId}	게시글 삭제 (하드 삭제)
 
----
+게시글 등록 예시
+Request
 
-## 🧱 설계 철학
+json
+코드 복사
+{
+  "board_title": "아이폰 13 판매합니다",
+  "board_content": "상태 좋습니다.",
+  "category": "전자기기",
+  "price": 500000,
+  "sale_status": "판매중",
+  "image_url": "/images/iphone13.png",
+  "region": "서울 강남구",
+  "user_id": "user01"
+}
+Response (200 OK)
 
-### 1) Context API 기반의 명확한 책임 분리  
-- UserContext: 회원/인증 관리  
-- PostContext: 게시글 CRUD  
-- CommentsContext: 댓글/대댓글 관리  
+json
+코드 복사
+1
+3) Reply API
+Method	URL	설명
+POST	/api/boards/{boardId}/replies	댓글 등록
+GET	/api/boards/{boardId}/replies	댓글 목록 조회 (status=Y)
+PATCH	/api/replies/{replyNo}	댓글 수정
+DELETE	/api/replies/{replyNo}	댓글 삭제 (소프트 삭제)
 
-### 2) 컴포넌트 재사용성 극대화  
-- PostCard, CommentItem 등 UI 컴포넌트화  
-- 유지보수 및 확장성을 고려한 설계
+댓글 등록 예시
+Request
 
-### 3) 서버 없이도 완전한 CRUD  
-IndexedDB를 사용하여 실제 서비스처럼 모든 기능을 로컬에서 수행 가능.
+json
+코드 복사
+{
+  "user_id": "user02",
+  "reply_content": "구매 가능할까요?"
+}
+Response (200 OK)
 
----
+json
+코드 복사
+10
+🚀 실행 방법
+1) 백엔드 실행 (Spring Boot)
+bash
+코드 복사
+cd back/jpa/jpa
+./gradlew bootRun
+서버 실행 주소: http://localhost:8888
 
-## 🗃 IndexedDB 사용 이유
+2) H2 콘솔 접속 정보
+URL: http://localhost:8888/h2-console
 
-### 📌 IndexedDB란?
-브라우저 내장 **비동기형 Key-Value 기반 NoSQL 데이터베이스**  
-대용량 데이터 저장이 가능하며, 객체/이미지까지 저장할 수 있다.
+Driver: org.h2.Driver
 
-### ✔ IndexedDB 장점
-- LocalStorage 대비 **대용량 저장 가능(수백MB~GB)**  
-- **비동기 처리**로 성능 우수  
-- JSON 객체 그대로 저장  
-- 인덱스 기반 빠른 검색 지원  
-- 오프라인 웹앱(PWA)에 최적화  
+JDBC URL: jdbc:h2:tcp://localhost/C:\workspace\07_RestServer\jpa/tdb
 
-### ✔ LocalStorage와 비교
-| 항목 | IndexedDB | LocalStorage |
-|------|------------|--------------|
-| 데이터 용량 | 매우 크다 | 약 5MB 제한 |
-| 저장 형태 | 객체, 파일 등 | 문자열만 |
-| 처리 방식 | 💡 비동기 | ⚠️ 동기(느리고 UI 멈춤 가능) |
-| 검색 성능 | 인덱스 지원 | 단순 문자열 |
-| 적합한 용도 | 게시글/댓글/이미지 | 간단한 설정값 |
+Username: sa
 
----
+Password: 1234
 
-## 🗺 카카오 주소 API
-
-### 📌 사용 목적
-- 거래 지역을 정확하게 입력하기위해서
-
-### ✔ 동작 흐름  
-1. 게시글 작성 시 → daum.Postcode로 주소 검색  
-2. 주소 문자열 저장 (예: "서울 강남구 역삼동")
-
-
-### 나중에 추가하고 싶은것들
-1. 카카오맵과 연동하여 지도로 주소 핑 찍기
-2. 검색 기능
+3) 프론트엔드 실행 (React)
+bash
+코드 복사
+cd front
+npm install
+npm run dev
+프론트 실행 주소: http://localhost:5173
