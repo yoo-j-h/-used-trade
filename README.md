@@ -103,12 +103,14 @@ udongmarket-rest/
 │ │ ├── repository/
 │ │ │ ├── MemberRepository.java
 │ │ │ ├── MemberRepositoryImpl.java
-│ │ │ └── BoardRepository.java
+│ │ │ ├── BoardRepository.java
+│ │ │ └── BoardRepositoryImpl.java
 │ │ ├── entity/
+│ │ │ ├── BaseTimeEntity.java
 │ │ │ ├── Member.java
+│ │ │ ├── Profile.java
 │ │ │ ├── Board.java
-│ │ │ ├── Reply.java
-│ │ │ └── Profile.java
+│ │ │ └── Reply.java
 │ │ ├── dto/
 │ │ │ ├── MemberDto.java
 │ │ │ ├── BoardDto.java
