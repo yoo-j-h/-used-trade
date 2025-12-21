@@ -1,3 +1,38 @@
 spring:
   application:
     name: jpa
+
+  datasource:
+    hikari:
+      jdbc-url: jdbc:h2:tcp://localhost/C:\workspace\07_RestServer\jpa/tdb
+      driver-class-name: org.h2.Driver
+      username: sa
+      password: 1234
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 100MB
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+
+server:
+  port: 8888
+
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true

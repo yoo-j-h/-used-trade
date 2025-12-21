@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "PROFILE")
+@Table(name = "profile")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Profile {
 
@@ -15,16 +15,22 @@ public class Profile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long profileId;
 
-    @Column(length = 100)
+    @Column(length = 500)
     private String profileImage;
 
     @Column(length = 300)
     private String intro;
 
-    //==== 연관관계 맵핑 ====
-
-    //프로필 : 회원 (1 : 1) - 연관관계 주인으로 Profile을 사용, 반대로 해도 됨
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", unique = true, nullable = false)
     private Member member;
+
+    public void changeMember(Member member) {
+        this.member = member;
+    }
+
+    public void patchUpdate(String profileImage, String intro) {
+        if (profileImage != null) this.profileImage = profileImage;
+        if (intro != null) this.intro = intro;
+    }
 }

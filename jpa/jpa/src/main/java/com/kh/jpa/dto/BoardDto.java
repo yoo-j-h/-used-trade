@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class BoardDto {
 
@@ -57,17 +58,19 @@ public class BoardDto {
         private Integer price;
         private String sale_status;
         private String image_url;
-        private Integer count;
         private String user_id;
         private String user_name;
         private LocalDateTime create_date;
+
+        private List<ReplyDto.Response> replies;
 
         public static Response of(
                 Long boardId, String boardTitle, String boardContent,
                 String category, String region, Integer price, String saleStatus,
                 String imageUrl, Integer count,
                 String userId, String userName,
-                LocalDateTime createDate
+                LocalDateTime createDate,
+                List<ReplyDto.Response> replies
         ) {
             return Response.builder()
                     .board_id(boardId)
@@ -78,10 +81,10 @@ public class BoardDto {
                     .price(price)
                     .sale_status(saleStatus)
                     .image_url(imageUrl)
-                    .count(count)
                     .user_id(userId)
                     .user_name(userName)
                     .create_date(createDate)
+                    .replies(replies)
                     .build();
         }
 
@@ -98,7 +101,6 @@ public class BoardDto {
                     .price(price)
                     .sale_status(saleStatus)
                     .image_url(imageUrl)
-                    .count(count)
                     .region(region)
                     .user_id(userId)
                     .create_date(createDate)

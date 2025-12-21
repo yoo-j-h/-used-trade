@@ -1,13 +1,16 @@
+// src/main/java/com/kh/jpa/entity/Reply.java
 package com.kh.jpa.entity;
 
 import com.kh.jpa.enums.CommonEnums;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Builder @AllArgsConstructor
+@Builder
+@AllArgsConstructor
 @Entity
-@Table(name = "REPLY")
-@Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "reply")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reply extends BaseTimeEntity {
 
     @Id
@@ -22,15 +25,27 @@ public class Reply extends BaseTimeEntity {
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.Y;
 
-    // === 연관관계 맵핑 ====
-    // 댓글 : 게시글 (N : 1) - 연관관계 주인
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ref_bno", nullable = false)
     private Board board;
 
-    // 댓글 : 댓글작성회원 (N : 1) - 연관관계 주인
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reply_writer", nullable = false)
     private Member member;
 
+    public void changeBoard(Board board) {
+        this.board = board;
+    }
+
+    public void changeMember(Member member) {
+        this.member = member;
+    }
+
+    public void patchUpdate(String replyContent) {
+        if (replyContent != null) this.replyContent = replyContent;
+    }
+
+    public void deactivate() {
+        this.status = CommonEnums.Status.N;
+    }
 }

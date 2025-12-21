@@ -1,7 +1,11 @@
+// src/main/java/com/kh/jpa/entity/Board.java
 package com.kh.jpa.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -45,6 +49,10 @@ public class Board extends BaseTimeEntity {
     @JoinColumn(name = "board_writer", nullable = false)
     private Member member;
 
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Reply> replies = new ArrayList<>();
+
     public void changeMember(Member member) {
         if (this.member != null) {
             this.member.getBoards().remove(this);
@@ -53,6 +61,16 @@ public class Board extends BaseTimeEntity {
         if (member != null && !member.getBoards().contains(this)) {
             member.getBoards().add(this);
         }
+    }
+
+    public void addReply(Reply reply) {
+        reply.changeBoard(this);
+        this.replies.add(reply);
+    }
+
+    public void removeReply(Reply reply) {
+        this.replies.remove(reply);
+        reply.changeBoard(null);
     }
 
     public void patchUpdate(String boardTitle, String boardContent, String category,

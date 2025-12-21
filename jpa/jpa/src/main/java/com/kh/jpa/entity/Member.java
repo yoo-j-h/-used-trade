@@ -1,3 +1,4 @@
+// src/main/java/com/kh/jpa/entity/Member.java
 package com.kh.jpa.entity;
 
 import com.kh.jpa.enums.CommonEnums;
@@ -39,16 +40,17 @@ public class Member extends BaseTimeEntity {
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.Y;
 
-    // ==== 연관관계 맵핑 ====
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "member",
-            cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Profile profile;
 
-    @OneToMany(mappedBy = "member", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "member")
     @Builder.Default
     private List<Board> boards = new ArrayList<>();
 
-    //회원정보 전체수정 메서드
+    @OneToMany(mappedBy = "member")
+    @Builder.Default
+    private List<Reply> replies = new ArrayList<>();
+
     public void putUpdate(String userName, String email, String phone, String address) {
         this.userName = userName;
         this.email = email;
@@ -56,7 +58,6 @@ public class Member extends BaseTimeEntity {
         this.address = address;
     }
 
-    //회원정보 부분수정 메서드
     public void patchUpdate(String userName, String email, String phone, String address) {
         if (userName != null) this.userName = userName;
         if (email != null) this.email = email;
