@@ -213,7 +213,7 @@ yaml
 - **POST** `/api/members`
 
 **Request Body**
-```json
+json
 {
   "user_id": "udon01",
   "user_pwd": "1234",
