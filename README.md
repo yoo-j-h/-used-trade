@@ -200,6 +200,311 @@ yaml
 | DELETE | `/api/replies/{replyNo}` | 댓글 삭제 (소프트 삭제) |
 
 ---
+## 📌 API 명세 (Body 포함)
+
+> Base URL: `http://localhost:8888`  
+> 모든 요청/응답은 `application/json` 기준 (파일 업로드 제외)
+
+---
+
+### 👤 Member API (`/api/members`)
+
+#### 1) 회원가입
+- **POST** `/api/members`
+
+**Request Body**
+```json
+{
+  "user_id": "udon01",
+  "user_pwd": "1234",
+  "user_name": "김우동",
+  "email": "udon01@test.com",
+  "phone": "010-1111-1111",
+  "address": "서울 강남구 역삼동"
+}
+Response (200 OK)
+
+json
+코드 복사
+"udon01"
+2) 회원 전체 조회 (status=Y만)
+GET /api/members
+
+Response (200 OK)
+
+json
+코드 복사
+[
+  {
+    "user_id": "udon01",
+    "user_name": "김우동",
+    "email": "udon01@test.com",
+    "phone": "010-1111-1111",
+    "address": "서울 강남구 역삼동",
+    "create_date": "2025-12-22T11:10:00",
+    "modify_date": "2025-12-22T11:10:00"
+  }
+]
+3) 회원 단건 조회 (status=Y만)
+GET /api/members/{userId}
+
+Response (200 OK)
+
+json
+코드 복사
+{
+  "user_id": "udon01",
+  "user_name": "김우동",
+  "email": "udon01@test.com",
+  "phone": "010-1111-1111",
+  "address": "서울 강남구 역삼동",
+  "create_date": "2025-12-22T11:10:00",
+  "modify_date": "2025-12-22T11:10:00"
+}
+4) 회원 정보 수정
+PUT /api/members/{userId}
+
+Request Body
+
+json
+코드 복사
+{
+  "user_name": "김우동(수정)",
+  "email": "udon01_new@test.com",
+  "phone": "010-9999-9999",
+  "address": "서울 마포구 합정동"
+}
+Response (200 OK)
+
+json
+코드 복사
+{
+  "user_id": "udon01",
+  "user_name": "김우동(수정)",
+  "email": "udon01_new@test.com",
+  "phone": "010-9999-9999",
+  "address": "서울 마포구 합정동",
+  "create_date": "2025-12-22T11:10:00",
+  "modify_date": "2025-12-22T11:30:00"
+}
+5) 회원 삭제 (소프트 삭제: status=N)
+DELETE /api/members/{userId}
+
+Response (200 OK)
+
+json
+코드 복사
+"ok"
+6) 이름으로 회원 검색 (status=Y만)
+GET /api/members/search?keyword={keyword}
+
+Response (200 OK)
+
+json
+코드 복사
+[
+  {
+    "user_id": "udon02",
+    "user_name": "박어묵",
+    "email": "udon02@test.com",
+    "phone": "010-2222-2222",
+    "address": "서울 마포구 합정동",
+    "create_date": "2025-12-22T11:15:00",
+    "modify_date": "2025-12-22T11:15:00"
+  }
+]
+🛒 Board API (/api/boards)
+아래는 “RESTful 복수형” 기준 예시입니다.
+(만약 현재 컨트롤러가 /api/board라면, URL만 /api/board로 바꿔서 사용하면 됩니다.)
+
+1) 게시글 등록
+POST /api/boards
+
+Request Body
+
+json
+코드 복사
+{
+  "board_title": "아이폰 13 미개봉 판매합니다",
+  "board_content": "미개봉, 구성품 모두 있습니다.",
+  "user_id": "udon01",
+  "category": "전자기기",
+  "price": 520000,
+  "sale_status": "판매중",
+  "image_url": "https://picsum.photos/id/0/600/400",
+  "region": "서울 강남구 역삼동"
+}
+Response (200 OK)
+
+json
+코드 복사
+1
+2) 게시글 목록 조회 (페이징)
+GET /api/boards?page=0&size=5&sort=createDate,desc
+
+Response (200 OK)
+
+json
+코드 복사
+{
+  "content": [
+    {
+      "board_id": 1,
+      "board_title": "아이폰 13 미개봉 판매합니다",
+      "price": 520000,
+      "sale_status": "판매중",
+      "image_url": "https://picsum.photos/id/0/600/400",
+      "count": 0,
+      "region": "서울 강남구 역삼동",
+      "user_id": "udon01",
+      "create_date": "2025-12-22T12:00:00"
+    }
+  ],
+  "page": 0,
+  "size": 5,
+  "total_elements": 1,
+  "total_pages": 1,
+  "last": true
+}
+3) 게시글 상세 조회 (댓글 포함)
+GET /api/boards/{boardId}
+
+Response (200 OK)
+
+json
+코드 복사
+{
+  "board_id": 1,
+  "board_title": "아이폰 13 미개봉 판매합니다",
+  "board_content": "미개봉, 구성품 모두 있습니다.",
+  "category": "전자기기",
+  "region": "서울 강남구 역삼동",
+  "price": 520000,
+  "sale_status": "판매중",
+  "image_url": "https://picsum.photos/id/0/600/400",
+  "count": 0,
+  "user_id": "udon01",
+  "user_name": "김우동",
+  "create_date": "2025-12-22T12:00:00",
+  "replies": [
+    {
+      "reply_no": 10,
+      "reply_content": "혹시 네고 가능할까요?",
+      "board_id": 1,
+      "user_id": "udon02",
+      "user_name": "박어묵",
+      "create_date": "2025-12-22T12:10:00"
+    }
+  ]
+}
+4) 게시글 수정
+PATCH /api/boards/{boardId}
+
+Request Body
+
+json
+코드 복사
+{
+  "board_title": "아이폰 13 (가격 인하)",
+  "board_content": "급처합니다.",
+  "category": "전자기기",
+  "price": 490000,
+  "sale_status": "판매중",
+  "image_url": "https://picsum.photos/id/0/600/400"
+}
+Response (200 OK)
+
+json
+코드 복사
+{
+  "board_id": 1,
+  "board_title": "아이폰 13 (가격 인하)",
+  "board_content": "급처합니다.",
+  "category": "전자기기",
+  "region": "서울 강남구 역삼동",
+  "price": 490000,
+  "sale_status": "판매중",
+  "image_url": "https://picsum.photos/id/0/600/400",
+  "count": 0,
+  "user_id": "udon01",
+  "user_name": "김우동",
+  "create_date": "2025-12-22T12:00:00",
+  "replies": []
+}
+5) 게시글 삭제 (하드 삭제)
+DELETE /api/boards/{boardId}
+
+Response (204 No Content)
+
+응답 바디 없음
+
+💬 Reply API
+1) 댓글 등록
+POST /api/boards/{boardId}/replies
+
+Request Body
+
+json
+코드 복사
+{
+  "user_id": "udon02",
+  "reply_content": "혹시 네고 가능할까요?"
+}
+Response (200 OK)
+
+json
+코드 복사
+10
+2) 특정 게시글 댓글 목록 조회 (status=Y만)
+GET /api/boards/{boardId}/replies
+
+Response (200 OK)
+
+json
+코드 복사
+[
+  {
+    "reply_no": 10,
+    "reply_content": "혹시 네고 가능할까요?",
+    "board_id": 1,
+    "user_id": "udon02",
+    "user_name": "박어묵",
+    "create_date": "2025-12-22T12:10:00"
+  }
+]
+3) 댓글 수정
+PATCH /api/replies/{replyNo}
+
+Request Body
+
+json
+코드 복사
+{
+  "reply_content": "네고 가능하면 바로 거래하고 싶어요!"
+}
+Response (200 OK)
+
+json
+코드 복사
+{
+  "reply_no": 10,
+  "reply_content": "네고 가능하면 바로 거래하고 싶어요!",
+  "board_id": 1,
+  "user_id": "udon02",
+  "user_name": "박어묵",
+  "create_date": "2025-12-22T12:10:00"
+}
+4) 댓글 삭제 (소프트 삭제: status=N)
+DELETE /api/replies/{replyNo}
+
+Response (200 OK)
+
+json
+코드 복사
+"ok"
+makefile
+코드 복사
+::contentReference[oaicite:0]{index=0}
 
 ## 🚀 실행 방법
 
