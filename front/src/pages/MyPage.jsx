@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUsers } from '../context/UserContext';
+import { useUsers } from '../context/UsersContext';
 import {
   PageContainer,
   Card,

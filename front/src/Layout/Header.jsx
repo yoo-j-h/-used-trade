@@ -13,7 +13,7 @@ import {
 } from './Layout.styled';
 
 import { ROUTES } from '../routes/routePaths';
-import { useUsers } from '../context/UserContext';
+import { useUsers } from '../context/UsersContext';
 
 const Header = () => {
   const location = useLocation();

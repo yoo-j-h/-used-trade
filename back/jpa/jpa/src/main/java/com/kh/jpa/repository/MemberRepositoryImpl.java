@@ -56,4 +56,22 @@ public class MemberRepositoryImpl implements MemberRepository {
                 .setParameter("status", CommonEnums.Status.Y)
                 .getResultList();
     }
+    @Override
+    public Optional<Member> findActiveByUserIdAndUserPwd(String userId, String userPwd) {
+        String jpql = """
+            select m
+            from Member m
+            where m.userId = :userId
+              and m.userPwd = :userPwd
+              and m.status = :status
+            """;
+
+        return em.createQuery(jpql, Member.class)
+                .setParameter("userId", userId)
+                .setParameter("userPwd", userPwd)
+                .setParameter("status", CommonEnums.Status.Y)
+                .getResultStream()
+                .findFirst();
+    }
+
 }

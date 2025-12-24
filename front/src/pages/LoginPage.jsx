@@ -11,19 +11,17 @@ import {
   LeftAlign,
   TextLinks,
 } from './Input.styled';
-import { useUsers } from '../context/UserContext';
+import { useUsers } from '../context/UsersContext';
 import { ROUTES } from '../routes/routePaths';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-
   const { login } = useUsers();
 
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
 
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!userId.trim() || !password.trim()) {
@@ -31,15 +29,16 @@ const LoginPage = () => {
       return;
     }
 
-    const user = login(userId, password);
+    try {
+      const user = await login(userId, password);
 
-    if (!user) {
+      // user는 camelCase: { userId, userName, ... }
+      alert(`${user.userName}님, 환영합니다!`);
+      navigate(ROUTES.HOME);
+    } catch (err) {
       alert('아이디 또는 비밀번호가 일치하지 않습니다.');
-      return;
+      console.error("login failed", err);
     }
-
-    alert(`${user.name}님, 환영합니다!`);
-    navigate(ROUTES.HOME); 
   };
 
   return (

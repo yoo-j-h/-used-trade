@@ -56,4 +56,9 @@ public class MemberController {
     public ResponseEntity<List<MemberDto.Response>> searchMemberByName(@RequestParam String keyword) {
         return ResponseEntity.ok(memberService.getMembersByName(keyword));
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<MemberDto.Response> login(@RequestBody MemberDto.Login loginDto) {
+        return ResponseEntity.ok(memberService.login(loginDto));
+    }
 }

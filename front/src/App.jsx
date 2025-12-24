@@ -1,7 +1,7 @@
 import AppRoutes from './routes/routes';
 import './App.css';
-import { UsersProvider } from './context/UserContext'; 
-import { PostsProvider } from './context/PostContext';
+import { UsersProvider } from './context/UsersContext'; 
+import { PostsProvider } from './context/PostsContext';
 import { CommentsProvider } from './context/CommentsContext';
 
 function App() {

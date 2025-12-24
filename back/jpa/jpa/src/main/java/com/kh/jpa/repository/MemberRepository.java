@@ -11,4 +11,5 @@ public interface MemberRepository {
     Optional<Member> findById(String userId);  // status=Y만
     void delete(Member member);                // 소프트 삭제
     List<Member> findByUserNameContaining(String keyword); // status=Y만
+    Optional<Member> findActiveByUserIdAndUserPwd(String userId, String userPwd);
 }

@@ -1,157 +1,80 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+// src/context/CommentsContext.jsx
+import React, { createContext, useContext, useCallback, useMemo, useState } from "react";
+import { http } from "../api/http";
 
 const CommentsContext = createContext(null);
-
 export const useComments = () => useContext(CommentsContext);
 
-// ---------- IndexedDB 헬퍼 ----------
-const DB_NAME = 'UdongCommentsDB';
-const DB_VERSION = 1;
-const STORE_NAME = 'comments';
+const toCamelReply = (r, boardId) => ({
+  commentId: r.reply_no,
+  postId: r.board_id ?? boardId,
+  userId: r.reply_writer,
+  content: r.reply_content,
+  parentId: r.parent_id ?? null,
+  createdAt: r.create_date,
+  updatedAt: r.modify_date,
+});
 
-// DB 열기
-const openCommentsDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+const toSnakeCreate = ({ userId, content, parentId }) => ({
+  reply_writer: userId,
+  reply_content: content,
+  parent_id: parentId ?? null,
+});
 
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        // commentId 기본키
-        db.createObjectStore(STORE_NAME, { keyPath: 'commentId' });
-      }
-    };
-
-    request.onsuccess = (event) => {
-      resolve(event.target.result);
-    };
-
-    request.onerror = (event) => {
-      reject(event.target.error);
-    };
-  });
-};
-
-// 전체 댓글 가져오기
-const getAllCommentsFromDB = (db) => {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.getAll();
-
-    req.onsuccess = () => {
-      resolve(req.result || []);
-    };
-
-    req.onerror = () => {
-      reject(req.error);
-    };
-  });
-};
-
-// 댓글 추가/업데이트
-const putCommentToDB = (db, comment) => {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.put(comment);
-
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-};
-
-// 댓글 삭제
-const deleteCommentFromDB = (db, commentId) => {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.delete(commentId);
-
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-};
-
-// ---------- CommentsProvider ----------
 export const CommentsProvider = ({ children }) => {
-  const [comments, setComments] = useState([]);
-  const [db, setDb] = useState(null);
+  const [byBoardId, setByBoardId] = useState({});
 
-  // 앱 시작 시 DB 열고 댓글 목록 불러오기
-  useEffect(() => {
-    let cancelled = false;
+  const loadComments = useCallback(async (boardId) => {
+    if (!Number.isFinite(boardId) || boardId <= 0) return;
 
-    openCommentsDB()
-      .then((dbInstance) => {
-        if (cancelled) {
-          dbInstance.close();
-          return;
-        }
-        setDb(dbInstance);
-        return getAllCommentsFromDB(dbInstance);
-      })
-      .then((initialComments) => {
-        if (!cancelled && initialComments) {
-          setComments(initialComments);
-        }
-      })
-      .catch((err) => {
-        console.error('IndexedDB(Comments) 초기화 오류:', err);
-      });
+    const res = await http.get(`/boards/${boardId}/replies`);
+    const arr = Array.isArray(res.data) ? res.data : [];
 
-    return () => {
-      cancelled = true;
-    };
+    const mapped = arr.map((r) => toCamelReply(r, boardId));
+    setByBoardId((prev) => ({ ...prev, [boardId]: mapped }));
   }, []);
 
-  // 🔹 댓글 추가 (일반 댓글 + 답글 공통)
-  // data: { postId, userId, content, parentId? }
-  const addComment = (data) => {
-    const newComment = {
-      ...data,
-      commentId: Date.now(), // 간단한 id
-      parentId: data.parentId || null, // null이면 최상위 댓글
-      createdAt: new Date().toISOString(),
-    };
-
-    setComments((prev) => [...prev, newComment]);
-
-    if (db) {
-      putCommentToDB(db, newComment).catch((err) =>
-        console.error('IndexedDB addComment 오류:', err)
-      );
-    }
-  };
-
-  // 🔹 댓글 삭제 (간단히 해당 댓글만 삭제)
-  const deleteComment = (commentId) => {
-    setComments((prev) => prev.filter((c) => c.commentId !== commentId));
-
-    if (db) {
-      deleteCommentFromDB(db, commentId).catch((err) =>
-        console.error('IndexedDB deleteComment 오류:', err)
-      );
-    }
-  };
-
-  // 🔹 특정 게시글의 댓글들 가져오기
-  const getCommentsByPostId = (postId) => {
-    return comments
-      .filter((c) => c.postId === postId)
-      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-  };
-
-  const value = {
-    comments,
-    addComment,
-    deleteComment,
-    getCommentsByPostId,
-  };
-
-  return (
-    <CommentsContext.Provider value={value}>
-      {children}
-    </CommentsContext.Provider>
+  const getCommentsByPostId = useCallback(
+    (boardId) => {
+      const arr = byBoardId[boardId];
+      return Array.isArray(arr) ? arr : [];
+    },
+    [byBoardId]
   );
+
+  const addComment = useCallback(
+    async ({ postId, userId, content, parentId }) => {
+      const payload = toSnakeCreate({ userId, content, parentId });
+      console.log("POST /boards/:id/replies payload:", payload);
+
+      try {
+        await http.post(`/boards/${postId}/replies`, payload);
+        await loadComments(postId);
+      } catch (e) {
+        console.error("addComment failed", e?.response?.data ?? e);
+        throw e;
+      }
+    },
+    [loadComments]
+  );
+
+  const deleteComment = useCallback(
+    async (commentId, postId) => {
+      await http.delete(`/replies/${commentId}`);
+      await loadComments(postId);
+    },
+    [loadComments]
+  );
+
+  const value = useMemo(
+    () => ({
+      loadComments,
+      getCommentsByPostId,
+      addComment,
+      deleteComment,
+    }),
+    [loadComments, getCommentsByPostId, addComment, deleteComment]
+  );
+
+  return <CommentsContext.Provider value={value}>{children}</CommentsContext.Provider>;
 };

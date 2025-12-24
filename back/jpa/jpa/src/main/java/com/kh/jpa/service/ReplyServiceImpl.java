@@ -51,6 +51,7 @@ public class ReplyServiceImpl implements ReplyService {
 
     @Override
     public List<ReplyDto.Response> getRepliesByBoard(Long boardId) {
+
         return replyRepository.findByBoardIdAndStatus(boardId, CommonEnums.Status.Y)
                 .stream()
                 .map(r -> ReplyDto.Response.of(
@@ -59,6 +60,7 @@ public class ReplyServiceImpl implements ReplyService {
                         r.getBoard().getBoardId(),
                         r.getMember().getUserId(),
                         r.getMember().getUserName(),
+                        null,                // ✅ parent_id (대댓글 미사용)
                         r.getCreateDate()
                 ))
                 .toList();
@@ -67,6 +69,7 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public ReplyDto.Response updateReply(Long replyNo, ReplyDto.Update updateDto) {
+
         Reply reply = replyRepository.findById(replyNo)
                 .orElseThrow(() -> new EntityNotFoundException("댓글을 찾을 수 없습니다."));
 
@@ -78,6 +81,7 @@ public class ReplyServiceImpl implements ReplyService {
                 reply.getBoard().getBoardId(),
                 reply.getMember().getUserId(),
                 reply.getMember().getUserName(),
+                null,                    // ✅ parent_id
                 reply.getCreateDate()
         );
     }
@@ -85,9 +89,10 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public void deleteReply(Long replyNo) {
+
         Reply reply = replyRepository.findById(replyNo)
                 .orElseThrow(() -> new EntityNotFoundException("댓글을 찾을 수 없습니다."));
 
-        reply.deactivate(); // 소프트 삭제
+        reply.deactivate();
     }
 }

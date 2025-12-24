@@ -40,6 +40,16 @@ public class MemberDto {
         private String address;
     }
 
+
+    @Getter @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Login {
+        private String user_id;
+        private String user_pwd;
+    }
+
+
     @Getter @Setter
     @AllArgsConstructor
     @NoArgsConstructor

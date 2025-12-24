@@ -20,19 +20,22 @@ public class Reply extends BaseTimeEntity {
     @Column(length = 400, nullable = false)
     private String replyContent;
 
-    @Column(length = 1, nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(length = 1, nullable = false)
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.Y;
 
+    // 게시글
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ref_bno", nullable = false)
     private Board board;
 
+    // 작성자
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reply_writer", nullable = false)
     private Member member;
 
+    // ===== 비즈니스 메서드 =====
     public void changeBoard(Board board) {
         this.board = board;
     }
@@ -42,7 +45,9 @@ public class Reply extends BaseTimeEntity {
     }
 
     public void patchUpdate(String replyContent) {
-        if (replyContent != null) this.replyContent = replyContent;
+        if (replyContent != null) {
+            this.replyContent = replyContent;
+        }
     }
 
     public void deactivate() {

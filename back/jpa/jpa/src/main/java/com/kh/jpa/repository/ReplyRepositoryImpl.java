@@ -27,13 +27,14 @@ public class ReplyRepositoryImpl implements ReplyRepository {
 
     @Override
     public List<Reply> findByBoardIdAndStatus(Long boardId, CommonEnums.Status status) {
+
         String jpql = """
-                select r
-                from Reply r
-                where r.board.boardId = :boardId
-                  and r.status = :status
-                order by r.createDate asc
-                """;
+            select r
+            from Reply r
+            where r.board.boardId = :boardId
+              and r.status = :status
+            order by r.createDate asc
+        """;
 
         return em.createQuery(jpql, Reply.class)
                 .setParameter("boardId", boardId)

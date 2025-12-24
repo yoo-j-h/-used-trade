@@ -39,7 +39,9 @@ public class Board extends BaseTimeEntity {
     @Builder.Default
     private String saleStatus = "판매중";
 
-    @Column(length = 500)
+    // ✅ 여기 변경: 길이 500 제한 제거 + LOB로 변경
+    @Lob
+    @Column
     private String imageUrl;
 
     @Builder.Default

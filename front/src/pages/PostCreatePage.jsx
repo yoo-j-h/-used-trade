@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePosts } from '../context/PostContext';  
-import { useUsers } from '../context/UserContext';
+import { usePosts } from '../context/PostsContext';  
+import { useUsers } from '../context/UsersContext';
 import {
   PageContainer,
   FormContainer,

@@ -11,4 +11,5 @@ public interface MemberService {
     MemberDto.Response updateMember(String userId, MemberDto.Update updateMemberDto);
     void deleteMember(String userId);
     List<MemberDto.Response> getMembersByName(String keyword);
+    MemberDto.Response login(MemberDto.Login loginDto);
 }

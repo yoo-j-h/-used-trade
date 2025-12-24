@@ -3,6 +3,7 @@ package com.kh.jpa.service;
 import com.kh.jpa.dto.MemberDto;
 import com.kh.jpa.entity.Member;
 import com.kh.jpa.repository.MemberRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,4 +102,24 @@ public class MemberServiceImpl implements MemberService {
                 ))
                 .toList();
     }
+    // src/main/java/com/kh/jpa/service/MemberServiceImpl.java
+    @Override
+    public MemberDto.Response login(MemberDto.Login loginDto) {
+        Member member = memberRepository.findActiveByUserIdAndUserPwd(
+                        loginDto.getUser_id(),
+                        loginDto.getUser_pwd()
+                )
+                .orElseThrow(() -> new EntityNotFoundException("아이디 또는 비밀번호가 올바르지 않습니다."));
+
+        return MemberDto.Response.of(
+                member.getUserId(),
+                member.getUserName(),
+                member.getEmail(),
+                member.getPhone(),
+                member.getAddress(),
+                member.getCreateDate(),
+                member.getModifyDate()
+        );
+    }
+
 }

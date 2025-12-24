@@ -49,6 +49,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public BoardDto.Response getBoardDetail(Long boardId) {
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
 
@@ -73,6 +74,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public Page<BoardDto.Response> getBoardList(Pageable pageable) {
+
         Page<Board> page = boardRepository.findAll(pageable);
 
         return page.map(board -> BoardDto.Response.ofSimple(
@@ -91,6 +93,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public BoardDto.Response updateBoard(Long boardId, BoardDto.Update updateDto) {
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
 
@@ -125,13 +128,19 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void deleteBoard(Long boardId) {
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
 
         boardRepository.delete(board);
     }
 
+    /* ===============================
+       Reply 변환 로직
+       =============================== */
+
     private List<ReplyDto.Response> toReplyResponses(Board board) {
+
         if (board.getReplies() == null) return List.of();
 
         return board.getReplies().stream()
@@ -141,14 +150,15 @@ public class BoardServiceImpl implements BoardService {
     }
 
     private ReplyDto.Response toReplyResponse(Reply reply) {
+
         return ReplyDto.Response.of(
                 reply.getReplyNo(),
                 reply.getReplyContent(),
-                reply.getBoard().getBoardId(),  
+                reply.getBoard().getBoardId(),
                 reply.getMember().getUserId(),
                 reply.getMember().getUserName(),
+                null,                       // ✅ parent_id (대댓글 미구현)
                 reply.getCreateDate()
         );
     }
-
 }

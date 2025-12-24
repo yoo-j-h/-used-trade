@@ -14,32 +14,27 @@ import {
   TextLinks,
 } from './Input.styled';
 import { useDaumPostcodePopup } from 'react-daum-postcode';
-import { useUsers } from '../context/UserContext';
+import { useUsers } from '../context/UsersContext';
 import { ROUTES } from '../routes/routePaths';
 
 const SingupPage = () => {
   const navigate = useNavigate();
-  const { users, addUser } = useUsers(); 
+  const { users, addUser } = useUsers();
 
   const postcodeScriptUrl =
     'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
   const open = useDaumPostcodePopup(postcodeScriptUrl);
 
-
   const [userId, setUserId] = useState('');
-  const [name, setName] = useState('');
+  const [userName, setUserName] = useState(''); // ✅ name -> userName
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [address, setAddress] = useState('');
   const [idChecked, setIdChecked] = useState(false);
 
-
   const formatPhoneNumber = (value) => {
- 
     let digits = value.replace(/\D/g, '');
-
-
     digits = digits.substring(0, 11);
 
     if (digits.length < 4) return digits;
@@ -53,13 +48,13 @@ const SingupPage = () => {
     setPhone(formatPhoneNumber(e.target.value));
   };
 
-
   const handleIdCheck = () => {
     if (!userId.trim()) {
       alert('아이디를 입력하세요.');
       return;
     }
 
+    // users는 camelCase
     const exists = users.some((user) => user.userId === userId);
 
     if (exists) {
@@ -70,7 +65,6 @@ const SingupPage = () => {
       setIdChecked(true);
     }
   };
-
 
   const handleAddressSearch = () => {
     open({
@@ -95,13 +89,12 @@ const SingupPage = () => {
     });
   };
 
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
       !userId.trim() ||
-      !name.trim() ||
+      !userName.trim() ||
       !phone.trim() ||
       !password.trim() ||
       !passwordConfirm.trim() ||
@@ -121,22 +114,30 @@ const SingupPage = () => {
       alert('이미 사용 중인 아이디입니다.');
       return;
     }
+
     if (!idChecked) {
       alert('아이디 중복체크를 먼저 해주세요.');
       return;
     }
 
+    // ✅ camelCase로만 작성 (UsersContext가 snake로 변환해서 전송)
     const signupData = {
       userId,
-      name,
-      phone,
+      userName,
       password,
+      email: null,
+      phone,
       address,
     };
 
-    addUser(signupData);
-    alert('회원가입이 완료되었습니다.');
-    navigate('/login');
+    try {
+      await addUser(signupData);
+      alert('회원가입이 완료되었습니다.');
+      navigate(ROUTES.LOGIN);
+    } catch (err) {
+      alert('회원가입에 실패했습니다.');
+      console.error("signup failed", err);
+    }
   };
 
   return (
@@ -154,7 +155,6 @@ const SingupPage = () => {
         <br />
 
         <form onSubmit={handleSubmit}>
-
           <InputBox>
             아이디
             <InputJustify>
@@ -177,8 +177,8 @@ const SingupPage = () => {
             이름
             <InputBar
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
               placeholder="이름을 입력하세요"
             />
           </InputBox>
@@ -203,7 +203,6 @@ const SingupPage = () => {
             />
           </InputBox>
 
-   
           <InputBox>
             비밀번호 확인
             <InputBar
