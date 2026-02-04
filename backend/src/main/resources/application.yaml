@@ -1,8 +1,19 @@
 spring:
   application:
-    name: ct  # 여기에 프로젝트 이름을 적으세요
+    name: ct
+  config:
+    # 1. 시크릿 파일(application_secret.properties)을 여기서 불러옵니다.
+    import: optional:classpath:application_secret.yaml
   profiles:
-    active: dev  # 기본적으로 개발(dev) 모드로 실행합니다
+    active: dev
+
+server:
+  port: 8001
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 ---
 # [개발 환경 설정: dev]
@@ -12,32 +23,26 @@ spring:
       on-profile: dev
 
   datasource:
-    # 아래 url은 로컬 DB 주소입니다. (3306 포트, tdb 데이터베이스)
-    url: jdbc:mysql://localhost:3306/tdb?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root    # 본인 DB 아이디 (보통 root)
-    password: 1234    # 본인 DB 비밀번호 (꼭 수정하세요!)
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 드라이버
+    # 2. 시크릿 파일에 있는 변수 값을 여기에 주입합니다.
+    url: ${DATASOURCE.URL}
+    username: ${DATASOURCE.USERNAME}
+    password: ${DATASOURCE.PASSWORD}
 
+  # JPA 설정 (MySQL용)
   jpa:
     hibernate:
-      ddl-auto: update  # 테이블을 자동으로 수정해줌 (편함)
+      ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-    show-sql: true      # 실행되는 SQL을 콘솔에 보여줌
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
 
+  # 파일 업로드 설정
   servlet:
     multipart:
-      max-file-size: 20MB      # 파일 업로드 최대 크기
+      max-file-size: 20MB
       max-request-size: 100MB
-
-server:
-  port: 8001  # 백엔드 서버 포트 (프론트는 5173, 백엔드는 8001)
-  servlet:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true

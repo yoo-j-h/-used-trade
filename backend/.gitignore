@@ -54,3 +54,10 @@ application-*.yml
 node_modules/
 .env
 .mtj.tmp/
+
+application_secret.yaml
+
+# Gradle
+.gradle/
+**/.gradle/
+build/
