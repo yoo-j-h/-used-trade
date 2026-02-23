@@ -134,4 +134,12 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
            "GROUP BY d.departmentName " +
            "ORDER BY d.departmentName ASC")
     List<Object[]> findDepartmentStatusByDate(@Param("date") LocalDate date);
+
+    /**
+     * 개인별 누적 근무시간
+     * @param empId
+     * @return
+     */
+    @Query("select a from Attendance a where a.empId.empId = :empId")
+    List<Attendance> findByEmpId(@Param("empId") String empId);
 }

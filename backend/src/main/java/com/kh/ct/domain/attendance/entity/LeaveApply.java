@@ -34,7 +34,7 @@ public class LeaveApply extends BaseTimeEntity {
     private LocalDateTime leaveStartDate;
 
     @Column(nullable = false)
-    private Float leaveDays;
+    private Double leaveDays;
 
     @Lob
     private String leaveApplyReason;

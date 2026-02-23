@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -52,15 +53,39 @@ public class ProtestApplyServiceImpl implements ProtestApplyService {
             ProtestDto.ApplyRequest request,
             List<MultipartFile> files
     ) {
-        log.info("근태 정정 신청 시작 - empId: {}, attendanceId: {}", empId, request.getAttendanceId());
+        log.info("근태 정정 신청 시작 - empId: {}, attendanceId: {}, attendanceDate: {}", 
+                empId, request.getAttendanceId(), request.getAttendanceDate());
 
         // 1. 직원 조회
         Emp applicant = empRepository.findById(empId)
                 .orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다"));
 
-        // 2. 정정 대상 근태 조회
-        Attendance targetAttendance = attendanceRepository.findById(request.getAttendanceId())
-                .orElseThrow(() -> new RuntimeException("근태 기록을 찾을 수 없습니다"));
+        // 2. 정정 대상 근태 조회 또는 생성
+        Attendance targetAttendance;
+        
+        if (request.getAttendanceId() != null) {
+            // 기존 근태 기록이 있는 경우
+            targetAttendance = attendanceRepository.findById(request.getAttendanceId())
+                    .orElseThrow(() -> new RuntimeException("근태 기록을 찾을 수 없습니다"));
+        } else if (request.getAttendanceDate() != null) {
+            // 근태 기록이 없는 경우 새로 생성
+            LocalDate attendanceDate = LocalDate.parse(request.getAttendanceDate());
+            
+            // 해당 날짜에 이미 근태 기록이 있는지 확인
+            targetAttendance = attendanceRepository
+                    .findByEmpId_EmpIdAndAttendanceDate(empId, attendanceDate)
+                    .orElseGet(() -> {
+                        // 근태 기록이 없으면 새로 생성
+                        Attendance newAttendance = Attendance.builder()
+                                .empId(applicant)
+                                .attendanceDate(attendanceDate)
+                                .attendanceStatus(CommonEnums.AttendanceStatus.ABSENT)  // 기본값: 결근
+                                .build();
+                        return attendanceRepository.save(newAttendance);
+                    });
+        } else {
+            throw new RuntimeException("attendanceId 또는 attendanceDate 중 하나는 필수입니다");
+        }
 
         // 3. 시간 파싱
         LocalTime requestInTime = null;
@@ -74,7 +99,17 @@ public class ProtestApplyServiceImpl implements ProtestApplyService {
             requestOutTime = LocalTime.parse(request.getProtestRequestOutTime(), DateTimeFormatter.ofPattern("HH:mm"));
         }
 
-        // 4. 파일 업로드 처리
+        // 4. 근무 유형 파싱
+        CommonEnums.AttendanceType attendanceType = CommonEnums.AttendanceType.NORMAL; // 기본값
+        if (request.getAttendanceType() != null && !request.getAttendanceType().isEmpty()) {
+            try {
+                attendanceType = CommonEnums.AttendanceType.valueOf(request.getAttendanceType().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("유효하지 않은 근무 유형입니다: " + request.getAttendanceType());
+            }
+        }
+
+        // 5. 파일 업로드 처리
         List<File> uploadedFiles = new ArrayList<>();
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
@@ -95,20 +130,22 @@ public class ProtestApplyServiceImpl implements ProtestApplyService {
             throw new RuntimeException("증빙 파일은 필수입니다");
         }
 
-        // 5. ProtestApply 엔티티 생성 (원래 상태 저장)
+        // 6. 정정 신청 엔티티 생성
         ProtestApply protestApply = ProtestApply.builder()
                 .protestApplyDate(LocalDateTime.now())
                 .protestApplyApplicant(applicant)
                 .protestApplyStatus(CommonEnums.ApplyStatus.PENDING)
-                .protestAttendanceStatus(CommonEnums.AttendanceStatus.PRESENT)  // 정정 후 기대 상태: 정상 출석
+                .protestAttendanceStatus(targetAttendance.getAttendanceStatus())
                 .protestRequestInTime(requestInTime)
                 .protestRequestOutTime(requestOutTime)
                 .protestReason(request.getProtestReason())
                 .targetAttendance(targetAttendance)
-                .originalAttendanceStatus(targetAttendance.getAttendanceStatus())  // 원래 상태 저장
+                .originalAttendanceStatus(targetAttendance.getAttendanceStatus())
+                .attendanceType(attendanceType)  // 근무 유형 설정
                 .build();
 
-        protestApplyRepository.save(protestApply);
+        // 7. 정정 신청 저장
+        protestApply = protestApplyRepository.save(protestApply);
 
         // 6. ProtestApplyFile 생성 (파일 연결)
         for (File file : uploadedFiles) {
@@ -264,9 +301,11 @@ public class ProtestApplyServiceImpl implements ProtestApplyService {
                 .protestRequestOutTime(entity.getProtestRequestOutTime())
                 .protestReason(entity.getProtestReason())
                 .status(entity.getProtestApplyStatus().name())
+                .attendanceType(entity.getAttendanceType() != null ? entity.getAttendanceType().name() : null)
                 .applicantName(entity.getProtestApplyApplicant().getEmpName())
                 .approverName(entity.getProtestApplyApprover() != null ? 
                         entity.getProtestApplyApprover().getEmpName() : null)
+                .cancelReason(entity.getProtestApplyCancelReason())
                 .createdDate(entity.getCreateDate())
                 .fileCount(entity.getFiles() != null ? entity.getFiles().size() : 0)
                 .build();
@@ -296,6 +335,7 @@ public class ProtestApplyServiceImpl implements ProtestApplyService {
                 .protestRequestOutTime(entity.getProtestRequestOutTime())
                 .protestReason(entity.getProtestReason())
                 .status(entity.getProtestApplyStatus().name())
+                .attendanceType(entity.getAttendanceType() != null ? entity.getAttendanceType().name() : null)
                 .applicantName(entity.getProtestApplyApplicant().getEmpName())
                 .approverName(entity.getProtestApplyApprover() != null ? 
                         entity.getProtestApplyApprover().getEmpName() : null)

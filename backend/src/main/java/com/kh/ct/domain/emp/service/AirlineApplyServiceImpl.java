@@ -3,7 +3,6 @@ package com.kh.ct.domain.emp.service;
 import com.kh.ct.domain.emp.dto.AirlineApplyDto;
 import com.kh.ct.domain.emp.entity.Airline;
 import com.kh.ct.domain.emp.entity.AirlineApply;
-import com.kh.ct.domain.emp.entity.AirlineStatus;
 import com.kh.ct.domain.emp.entity.Emp;
 import com.kh.ct.domain.emp.entity.ActivationToken;
 import com.kh.ct.domain.emp.repository.ActivationTokenRepository;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -101,7 +99,7 @@ public class AirlineApplyServiceImpl implements AirlineApplyService {
                         .email(application.getAirlineApplyEmail())
                         .phone(application.getManagerPhone())
                         .plan("Professional") // 기본 플랜
-                        .status(AirlineStatus.ACTIVE)
+                        .status(CommonEnums.AirlineStatus.ACTIVE)
                         .icon("✈️")
                         .country("대한민국") // 국내 서비스
                         .joinDate(LocalDate.now())
@@ -133,7 +131,7 @@ public class AirlineApplyServiceImpl implements AirlineApplyService {
                 .email(application.getAirlineApplyEmail())
                 .empStatus(CommonEnums.EmpStatus.Y)
                 .startDate(LocalDateTime.now())
-                .leaveCount(15.0f)
+                .leaveCount(15.0)
                 .empNo(generateEmpNo(application.getAirlineName()))
                 .build();
         
@@ -236,7 +234,7 @@ public class AirlineApplyServiceImpl implements AirlineApplyService {
                 .email(application.getAirlineApplyEmail())
                 .empStatus(CommonEnums.EmpStatus.S) // 초기 상태: S (활성화 대기)
                 .startDate(LocalDateTime.now())
-                .leaveCount(15.0f)
+                .leaveCount(15.0)
                 .empNo(generateEmpNo(application.getAirlineName()))
                 .build();
         

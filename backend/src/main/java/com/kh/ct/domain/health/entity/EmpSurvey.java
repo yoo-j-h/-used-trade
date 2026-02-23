@@ -16,17 +16,16 @@ public class EmpSurvey extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long empSurveyId;
 
-    @JoinColumn(name = "survey_id2")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Survey surveyId2;
-
     @JoinColumn(name = "emp_id")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Emp empId;
 
-    private Integer flyStressPoint;
+//    private Integer flyStressPoint;
+    private Integer workStressPoint;
 
-    private Integer timeDifferencePoint;
+//    private Integer timeDifferencePoint;
+    private Integer commuStressPoint;
 
-    private Integer workPatternPoint;
+//    private Integer workPatternPoint;
+    private Integer recoveryStressPoint;
 }

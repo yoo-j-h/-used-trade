@@ -1,15 +1,15 @@
 package com.kh.ct.domain.schedule.controller;
 
-import com.kh.ct.domain.emp.entity.Emp;
-import com.kh.ct.domain.emp.repository.EmpRepository;
 import com.kh.ct.domain.schedule.dto.FlyScheduleDto;
+import com.kh.ct.domain.schedule.service.FlightSyncService;
 import com.kh.ct.domain.schedule.service.FlyScheduleService;
-import com.kh.ct.global.common.CommonEnums;
 import com.kh.ct.global.dto.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -18,11 +18,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/flight-schedules")
 @RequiredArgsConstructor
+@Validated
 public class FlyScheduleController {
     
     private final FlyScheduleService flyScheduleService;
-    private final EmpRepository empRepository;
-    
+    private final FlightSyncService flightSyncService;
+
     /**
      * 비행편 목록 조회
      * - 관리자: 항공사별 전체 비행편 조회
@@ -37,37 +38,19 @@ public class FlyScheduleController {
             @RequestParam(required = false) String departure,
             @RequestParam(required = false) String destination
     ) {
-        String empId = null;
-        Long finalAirlineId = airlineId;
-        
-        if (authentication != null && authentication.isAuthenticated()) {
-            String authEmpId = authentication.getName();
-            Emp emp = empRepository.findById(authEmpId).orElse(null);
-            
-            if (emp != null) {
-                // 관리자가 아니면 본인 배정 비행편만 조회
-                if (emp.getRole() != CommonEnums.Role.AIRLINE_ADMIN && 
-                    emp.getRole() != CommonEnums.Role.SUPER_ADMIN) {
-                    empId = authEmpId;
-                } else {
-                    // 관리자인 경우 자신의 항공사 ID 사용
-                    if (finalAirlineId == null && emp.getAirlineId() != null) {
-                        finalAirlineId = emp.getAirlineId().getAirlineId();
-                    }
-                }
-            }
-        }
-        
-        List<FlyScheduleDto.ListResponse> schedules = flyScheduleService.getFlightSchedules(
-                finalAirlineId,
-                empId,
-                startDate,
-                endDate,
-                departure,
-                destination
+        List<FlyScheduleDto.ListResponse> schedules = flyScheduleService.getFlightSchedulesWithAuth(
+                authentication, airlineId, startDate, endDate, departure, destination
         );
-        
         return ResponseEntity.ok(ApiResponse.success("비행편 목록 조회 성공", schedules));
+    }
+
+    /**
+     * 외부 API 데이터 동기화
+     */
+    @GetMapping("/sync")
+    public ResponseEntity<ApiResponse<String>> syncExternalData() {
+        flightSyncService.syncApiData();
+        return ResponseEntity.ok(ApiResponse.success("비행 스케줄 동기화 요청 성공", "데이터 처리가 시작되었습니다."));
     }
     
     /**
@@ -78,12 +61,33 @@ public class FlyScheduleController {
             @PathVariable Long flyScheduleId,
             Authentication authentication
     ) {
-        String empId = null;
-        if (authentication != null && authentication.isAuthenticated()) {
-            empId = authentication.getName();
-        }
-        
-        FlyScheduleDto schedule = flyScheduleService.getFlightScheduleDetail(flyScheduleId, empId);
+        FlyScheduleDto schedule = flyScheduleService.getFlightScheduleDetailWithAuth(authentication, flyScheduleId);
         return ResponseEntity.ok(ApiResponse.success("비행편 상세 조회 성공", schedule));
+    }
+    
+    /**
+     * 승무원 추가 (관리자만 가능)
+     */
+    @PostMapping("/{flyScheduleId}/crew")
+    public ResponseEntity<ApiResponse<Void>> addCrewMember(
+            @PathVariable Long flyScheduleId,
+            @Valid @RequestBody FlyScheduleDto.AddCrewMemberRequest request,
+            Authentication authentication
+    ) {
+        flyScheduleService.addCrewMemberWithAuth(authentication, flyScheduleId, request.getEmpId());
+        return ResponseEntity.ok(ApiResponse.success("승무원 추가 성공", null));
+    }
+    
+    /**
+     * 승무원 삭제 (관리자만 가능)
+     */
+    @DeleteMapping("/{flyScheduleId}/crew/{empId}")
+    public ResponseEntity<ApiResponse<Void>> removeCrewMember(
+            @PathVariable Long flyScheduleId,
+            @PathVariable String empId,
+            Authentication authentication
+    ) {
+        flyScheduleService.removeCrewMemberWithAuth(authentication, flyScheduleId, empId);
+        return ResponseEntity.ok(ApiResponse.success("승무원 삭제 성공", null));
     }
 }

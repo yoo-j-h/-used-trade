@@ -35,4 +35,12 @@ public interface EmpFlyScheduleRepository extends JpaRepository<EmpFlySchedule, 
             @Param("flyScheduleId") Long flyScheduleId,
             @Param("empId") String empId
     );
+    
+    // 여러 비행편 ID로 배정 정보 일괄 조회 (배치 최적화)
+    @Query("SELECT efs FROM EmpFlySchedule efs " +
+           "JOIN FETCH efs.emp emp " +
+           "JOIN FETCH efs.flySchedule fs " +
+           "JOIN FETCH fs.schedule s " +
+           "WHERE fs.flyScheduleId IN :flyScheduleIds")
+    List<EmpFlySchedule> findByFlyScheduleIdIn(@Param("flyScheduleIds") List<Long> flyScheduleIds);
 }

@@ -23,6 +23,8 @@ public class AirlineDto {
         private Long activeUsers;
         private String status;
         private String icon;
+        private String primaryColor;
+        private String secondaryColor;
     }
 
     @Getter
@@ -40,6 +42,10 @@ public class AirlineDto {
         private String totalRevenue;
         private String status;
         private String icon;
+        private String primaryColor;
+        private String secondaryColor;
+        private String businessNumber;
+        private String mainNumber;
         private String country;
         private String address;
         private String email;

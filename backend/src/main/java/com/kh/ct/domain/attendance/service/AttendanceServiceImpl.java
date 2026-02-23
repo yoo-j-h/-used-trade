@@ -111,12 +111,17 @@ public class AttendanceServiceImpl implements AttendanceService {
         Map<Integer, String> attendanceMap = new HashMap<>();
         // 날짜별 상세 정보 맵 생성
         Map<Integer, AttendanceDto.DailyAttendanceDto> dailyDataMap = new HashMap<>();
-        
+
         for (Attendance attendance : attendanceList) {
             int day = attendance.getAttendanceDate().getDayOfMonth();
-            String status = convertStatusToFrontend(attendance.getAttendanceStatus());
+
+            // [수정됨] 별도 메서드 호출 대신 Enum의 .name() 사용 (Null Safety 적용)
+            String status = (attendance.getAttendanceStatus() != null)
+                    ? attendance.getAttendanceStatus().name()
+                    : "UNKNOWN";
+
             attendanceMap.put(day, status);
-            
+
             // 상세 정보 추가
             AttendanceDto.DailyAttendanceDto dailyData = AttendanceDto.DailyAttendanceDto.builder()
                     .attendanceId(attendance.getAttendanceId())
@@ -147,23 +152,5 @@ public class AttendanceServiceImpl implements AttendanceService {
             return Duration.between(attendance.getInTime(), attendance.getOutTime()).toHours();
         }
         return null;
-    }
-
-    /**
-     * 백엔드 상태를 프론트엔드 형식으로 변환
-     */
-    private String convertStatusToFrontend(CommonEnums.AttendanceStatus status) {
-        return switch (status) {
-            case PRESENT -> "PRESENT";
-            case LATE -> "LATE";
-            case ABSENT -> "ABSENT";
-            case EARLY_LEAVE -> "EARLY_LEAVE";
-            case HALF_DAY -> "HALF_DAY";
-            case VACATION -> "VACATION";
-            case LEAVE_PENDING -> "LEAVE_PENDING";  // 휴가 대기
-            case LEAVE -> "LEAVE";                  // 휴가 승인
-            case PROTEST_PENDING -> "PROTEST_PENDING";  // 정정 신청 대기
-            default -> "unknown";
-        };
     }
 }

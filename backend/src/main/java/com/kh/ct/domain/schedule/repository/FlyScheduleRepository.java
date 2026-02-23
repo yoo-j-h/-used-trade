@@ -63,4 +63,36 @@ public interface FlyScheduleRepository extends JpaRepository<FlySchedule, Long> 
            "JOIN FETCH fs.schedule s " +
            "WHERE fs.flyScheduleId = :flyScheduleId")
     Optional<FlySchedule> findByFlyScheduleId(@Param("flyScheduleId") Long flyScheduleId);
+    
+    /**
+     * 통합 조회 메서드: 모든 필터 조건을 한 번에 처리
+     * - empId가 있으면 해당 직원이 배정된 비행편만 조회
+     * - empId가 없으면 관리자용 조회 (모든 필터 조건 적용)
+     */
+    @Query("SELECT DISTINCT fs FROM FlySchedule fs " +
+           "JOIN FETCH fs.schedule s " +
+           "LEFT JOIN EmpFlySchedule efs ON efs.flySchedule.flyScheduleId = fs.flyScheduleId " +
+           "WHERE (:empId IS NULL OR :empId = '' OR efs.emp.empId = :empId) " +
+           "AND (:airlineId IS NULL OR fs.airlineId = :airlineId) " +
+           "AND (:startDate IS NULL OR fs.flyStartTime >= :startDate) " +
+           "AND (:endDate IS NULL OR fs.flyStartTime < :endDate) " +
+           "AND (:departure IS NULL OR :departure = '' OR fs.departure LIKE CONCAT('%', :departure, '%')) " +
+           "AND (:destination IS NULL OR :destination = '' OR fs.destination LIKE CONCAT('%', :destination, '%')) " +
+           "ORDER BY fs.flyStartTime ASC")
+    List<FlySchedule> findWithFilters(
+        @Param("empId") String empId,
+        @Param("airlineId") Long airlineId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
+        @Param("departure") String departure,
+        @Param("destination") String destination
+    );
+    
+    // 날짜 범위 내 비행편 개수 조회
+    @Query("SELECT COUNT(fs) FROM FlySchedule fs " +
+           "WHERE fs.flyStartTime >= :startDate AND fs.flyStartTime <= :endDate")
+    long countByFlyStartTimeBetween(
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
 }

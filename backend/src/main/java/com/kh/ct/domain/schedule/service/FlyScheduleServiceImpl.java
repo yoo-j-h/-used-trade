@@ -12,7 +12,11 @@ import com.kh.ct.domain.schedule.repository.AirportRepository;
 import com.kh.ct.domain.schedule.repository.EmpFlyScheduleRepository;
 import com.kh.ct.domain.schedule.repository.EmpScheduleRepository;
 import com.kh.ct.domain.schedule.repository.FlyScheduleRepository;
+import com.kh.ct.global.common.CommonEnums;
+import com.kh.ct.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -44,77 +49,114 @@ public class FlyScheduleServiceImpl implements FlyScheduleService {
             String departure,
             String destination
     ) {
-        List<FlySchedule> schedules;
+        // 통합 조회 메서드 사용 (모든 필터 조건을 한 번에 처리)
+        List<FlySchedule> schedules = flyScheduleRepository.findWithFilters(
+                empId,
+                airlineId,
+                startDate,
+                endDate,
+                departure != null ? departure.trim() : null,
+                destination != null ? destination.trim() : null
+        );
         
-        try {
-            // 직원인 경우 본인이 배정된 비행편만 조회
-            if (empId != null) {
-                schedules = flyScheduleRepository.findByEmpId(empId);
-            } else {
-                // 관리자인 경우 필터 조건에 따라 조회
-                if (startDate != null && endDate != null) {
-                    schedules = flyScheduleRepository.findByDateRange(airlineId, startDate, endDate);
-                } else if (departure != null || destination != null) {
-                    schedules = flyScheduleRepository.findByDepartureAndDestination(airlineId, departure, destination);
-                } else {
-                    // airlineId가 null이면 전체 조회
-                    if (airlineId == null) {
-                        schedules = flyScheduleRepository.findAllByOrderByFlyStartTimeAsc();
-                    } else {
-                        schedules = flyScheduleRepository.findByAirlineId(airlineId);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("비행편 조회 중 오류 발생: " + e.getMessage(), e);
-        }
-        
-        // 직원이 배정된 비행편 ID 목록 (isAssignedToMe 판단용) - EmpFlySchedule 사용
-        Set<Long> assignedScheduleIds = null;
-        if (empId != null) {
-            assignedScheduleIds = empFlyScheduleRepository.findByEmpId(empId).stream()
-                    .map(efs -> efs.getFlySchedule().getFlyScheduleId())
-                    .collect(Collectors.toSet());
+        // 조회된 비행편이 없으면 빈 리스트 반환
+        if (schedules.isEmpty()) {
+            return List.of();
         }
         
         // 모든 비행편 ID 목록
         List<Long> flyScheduleIds = schedules.stream()
                 .map(FlySchedule::getFlyScheduleId)
+                .filter(id -> id != null)
                 .collect(Collectors.toList());
         
-        // 각 비행편에 배정된 직원 수 조회 (크루 배정 여부 판단용)
+        // 직원이 배정된 비행편 ID 목록 (isAssignedToMe 판단용)
+        Set<Long> assignedScheduleIds = null;
+        if (empId != null && !empId.trim().isEmpty()) {
+            assignedScheduleIds = empFlyScheduleRepository.findByEmpId(empId).stream()
+                    .map(efs -> {
+                        if (efs.getFlySchedule() != null) {
+                            return efs.getFlySchedule().getFlyScheduleId();
+                        }
+                        return null;
+                    })
+                    .filter(id -> id != null)
+                    .collect(Collectors.toSet());
+        }
+        
+        // 각 비행편에 배정된 직원 수 조회 (크루 배정 여부 판단용) - 배치 조회로 최적화
         Map<Long, Long> crewCountMap = new java.util.HashMap<>();
         if (!flyScheduleIds.isEmpty()) {
-            // 각 비행편별로 배정된 직원 수 조회
-            for (Long scheduleId : flyScheduleIds) {
-                long count = empFlyScheduleRepository.findByFlyScheduleId(scheduleId).size();
-                crewCountMap.put(scheduleId, count);
-            }
+            List<EmpFlySchedule> allEmpFlySchedules = empFlyScheduleRepository.findByFlyScheduleIdIn(flyScheduleIds);
+            Map<Long, Long> countMap = allEmpFlySchedules.stream()
+                    .collect(Collectors.groupingBy(
+                            efs -> {
+                                if (efs.getFlySchedule() != null) {
+                                    return efs.getFlySchedule().getFlyScheduleId();
+                                }
+                                return null;
+                            },
+                            Collectors.counting()
+                    ));
+            crewCountMap.putAll(countMap);
         }
         
         final Set<Long> finalAssignedScheduleIds = assignedScheduleIds;
         final Map<Long, Long> finalCrewCountMap = crewCountMap;
         
         return schedules.stream()
+                .filter(fs -> fs != null && fs.getFlyScheduleId() != null)
                 .map(fs -> convertToListResponse(fs, finalAssignedScheduleIds, finalCrewCountMap))
+                .filter(response -> response != null)
                 .collect(Collectors.toList());
     }
     
     @Override
+    public List<FlyScheduleDto.ListResponse> getFlightSchedulesWithAuth(
+            Authentication authentication,
+            Long airlineId,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            String departure,
+            String destination
+    ) {
+        String empId = null;
+        Long finalAirlineId = airlineId;
+        
+        if (authentication != null && authentication.isAuthenticated()) {
+            String authEmpId = authentication.getName();
+            Emp emp = empRepository.findById(authEmpId)
+                    .orElseThrow(() -> BusinessException.notFound("존재하지 않는 직원입니다. empId=" + authEmpId));
+            
+            // ADMIN(AIRLINE_ADMIN, SUPER_ADMIN): 전체 비행편 조회 가능
+            // PILOT, CABIN_CREW, MAINTENANCE, GROUND_STAFF: 본인 배정 비행편만 조회
+            if (emp.getRole() != CommonEnums.Role.AIRLINE_ADMIN && 
+                emp.getRole() != CommonEnums.Role.SUPER_ADMIN) {
+                // 일반 직원은 본인 배정 비행편만 조회
+                empId = authEmpId;
+            } else {
+                // 관리자는 자신의 항공사 전체 비행편 조회 가능
+                if (finalAirlineId == null && emp.getAirlineId() != null) {
+                    finalAirlineId = emp.getAirlineId().getAirlineId();
+                }
+            }
+        }
+        
+        return getFlightSchedules(finalAirlineId, empId, startDate, endDate, departure, destination);
+    }
+
+    @Override
     public FlyScheduleDto getFlightScheduleDetail(Long flyScheduleId, String empId) {
         FlySchedule flySchedule = flyScheduleRepository.findByFlyScheduleId(flyScheduleId)
-                .orElseThrow(() -> new IllegalArgumentException("비행편을 찾을 수 없습니다. (flyScheduleId: " + flyScheduleId + ")"));
+                .orElseThrow(() -> BusinessException.notFound("해당 비행편이 존재하지 않습니다. flyScheduleId=" + flyScheduleId));
         
         // 크루 멤버 조회 (EmpFlySchedule 사용)
         List<EmpFlySchedule> empFlySchedules = empFlyScheduleRepository.findByFlyScheduleId(flyScheduleId);
-        System.out.println("비행편 ID " + flyScheduleId + "에 배정된 직원 수: " + empFlySchedules.size());
         
         List<FlyScheduleDto.CrewMemberResponse> crewMembers = empFlySchedules.stream()
                 .map(efs -> {
                     Emp emp = efs.getEmp();
                     if (emp == null) {
-                        System.err.println("EmpFlySchedule ID " + efs.getEmpFlyScheduleId() + "의 Emp가 null입니다.");
                         return null;
                     }
                     
@@ -143,16 +185,13 @@ public class FlyScheduleServiceImpl implements FlyScheduleService {
                 .filter(member -> member != null)
                 .collect(Collectors.toList());
         
-        System.out.println("변환된 크루 멤버 수: " + crewMembers.size());
-        
         // 항공사 정보 (FlySchedule의 airlineId 사용)
         Long airlineId = flySchedule.getAirlineId();
         String airlineName = null;
         if (airlineId != null) {
-            Airline airline = airlineRepository.findById(airlineId).orElse(null);
-            if (airline != null) {
-                airlineName = airline.getAirlineName();
-            }
+            airlineName = airlineRepository.findById(airlineId)
+                    .map(Airline::getAirlineName)
+                    .orElse(null);
         }
         
         // 시간 포맷팅
@@ -185,9 +224,23 @@ public class FlyScheduleServiceImpl implements FlyScheduleService {
                 .duration(duration)
                 .build();
     }
+
+    @Override
+    public FlyScheduleDto getFlightScheduleDetailWithAuth(Authentication authentication, Long flyScheduleId) {
+        String empId = null;
+        if (authentication != null && authentication.isAuthenticated()) {
+            empId = authentication.getName();
+        }
+        
+        return getFlightScheduleDetail(flyScheduleId, empId);
+    }
     
     private FlyScheduleDto.ListResponse convertToListResponse(FlySchedule fs, Set<Long> assignedScheduleIds, Map<Long, Long> crewCountMap) {
-        // 시간 포맷팅
+        if (fs == null || fs.getFlyScheduleId() == null) {
+            return null;
+        }
+        
+        // 시간 포맷팅 (null 체크)
         String departureTime = formatTime(fs.getFlyStartTime());
         String arrivalTime = formatTime(fs.getFlyEndTime());
         String duration = calculateDuration(
@@ -209,10 +262,11 @@ public class FlyScheduleServiceImpl implements FlyScheduleService {
         Long airlineId = fs.getAirlineId();
         String airlineName = null;
         if (airlineId != null) {
-            Airline airline = airlineRepository.findById(airlineId).orElse(null);
-            if (airline != null) {
-                airlineName = airline.getAirlineName();
-            }
+            airlineName = airlineRepository.findById(airlineId)
+                    .map(Airline::getAirlineName)
+                    .orElse("알 수 없는 항공사");
+        } else {
+            airlineName = "공통";
         }
         
         return FlyScheduleDto.ListResponse.builder()
@@ -310,6 +364,86 @@ public class FlyScheduleServiceImpl implements FlyScheduleService {
         } catch (Exception e) {
             // ZoneId 파싱 실패 시 기본 타임존 사용
             return ZoneId.systemDefault();
+        }
+    }
+    
+    @Override
+    @Transactional
+    public void addCrewMemberWithAuth(Authentication authentication, Long flyScheduleId, String empId) {
+        // 관리자 권한 체크
+        checkAdminPermission(authentication);
+        
+        addCrewMember(flyScheduleId, empId);
+    }
+
+    @Override
+    @Transactional
+    public void addCrewMember(Long flyScheduleId, String empId) {
+        // 비행편 존재 확인 (BoardService 스타일)
+        FlySchedule flySchedule = flyScheduleRepository.findByFlyScheduleId(flyScheduleId)
+                .orElseThrow(() -> BusinessException.notFound("해당 비행편이 존재하지 않습니다. flyScheduleId=" + flyScheduleId));
+
+        // 직원 존재 확인
+        Emp emp = empRepository.findById(empId)
+                .orElseThrow(() -> BusinessException.notFound("존재하지 않는 직원입니다. empId=" + empId));
+
+        // 이미 배정되어 있는지 확인
+        List<EmpFlySchedule> existing = empFlyScheduleRepository.findByFlyScheduleIdAndEmpId(flyScheduleId, empId);
+        if (!existing.isEmpty()) {
+            throw BusinessException.conflict("이미 해당 비행편에 배정된 직원입니다.");
+        }
+        
+        // 승무원 배정 생성
+        EmpFlySchedule empFlySchedule = EmpFlySchedule.builder()
+                .emp(emp)
+                .flySchedule(flySchedule)
+                .build();
+        
+        empFlyScheduleRepository.save(empFlySchedule);
+    }
+    
+    @Override
+    @Transactional
+    public void removeCrewMemberWithAuth(Authentication authentication, Long flyScheduleId, String empId) {
+        // 관리자 권한 체크
+        checkAdminPermission(authentication);
+        
+        removeCrewMember(flyScheduleId, empId);
+    }
+
+    @Override
+    @Transactional
+    public void removeCrewMember(Long flyScheduleId, String empId) {
+        // 배정 정보 조회
+        List<EmpFlySchedule> empFlySchedules = empFlyScheduleRepository.findByFlyScheduleIdAndEmpId(flyScheduleId, empId);
+        
+        if (empFlySchedules.isEmpty()) {
+            throw BusinessException.notFound("해당 비행편에 배정된 직원을 찾을 수 없습니다. flyScheduleId=" + flyScheduleId + ", empId=" + empId);
+        }
+        
+        // 배정 정보 삭제
+        empFlyScheduleRepository.deleteAll(empFlySchedules);
+    }
+
+    /**
+     * 관리자 권한 체크 메서드
+     * ADMIN(AIRLINE_ADMIN, SUPER_ADMIN)만 수정 가능
+     * BoardService 스타일: 명확한 예외 메시지와 함께 예외 발생
+     */
+    private void checkAdminPermission(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw BusinessException.forbidden("인증이 필요합니다.");
+        }
+        
+        String authEmpId = authentication.getName();
+        Emp emp = empRepository.findById(authEmpId)
+                .orElseThrow(() -> BusinessException.notFound("존재하지 않는 직원입니다. empId=" + authEmpId));
+        
+        // 관리자(AIRLINE_ADMIN, SUPER_ADMIN)만 수정 가능
+        // PILOT, CABIN_CREW, MAINTENANCE, GROUND_STAFF는 조회만 가능
+        if (emp.getRole() != CommonEnums.Role.AIRLINE_ADMIN && 
+            emp.getRole() != CommonEnums.Role.SUPER_ADMIN) {
+            throw BusinessException.forbidden("관리자 권한이 필요합니다. 현재 권한: " + emp.getRole());
         }
     }
 }

@@ -24,6 +24,12 @@ public interface EmpRepository extends JpaRepository<Emp, String> {
     
     Optional<Emp> findByEmailAndRole(String email, CommonEnums.Role role);
 
+    List<Emp> findByAirlineId_AirlineIdAndJob(Long airlineId, String job);
+
+    Optional<Emp> findByEmpNameAndEmailAndEmpStatus(String empName, String email, CommonEnums.EmpStatus status);
+
+    Optional<Emp> findByEmpIdAndEmailAndEmpStatus(String empId, String email, CommonEnums.EmpStatus status);
+
     // 직원 상세 정보 조회 (JOIN FETCH로 LAZY 직렬화 문제 방지)
     @Query("SELECT e FROM Emp e " +
            "LEFT JOIN FETCH e.departmentId dept " +
@@ -71,5 +77,28 @@ public interface EmpRepository extends JpaRepository<Emp, String> {
   """
     )
     Page<HealthDto.AdminEmpHealthRow> findAdminEmpHealthRows(@Param("empName") String empName, Pageable pageable);
+
+    // 역할별 직원 조회 (JOIN FETCH로 LAZY 직렬화 문제 방지)
+    @Query("""
+        SELECT DISTINCT e
+        FROM Emp e
+        LEFT JOIN FETCH e.departmentId dept
+        LEFT JOIN FETCH e.airlineId airline
+        WHERE (:role IS NULL OR e.role = :role)
+          AND (:airlineId IS NULL OR airline.airlineId = :airlineId)
+        ORDER BY e.empName ASC
+    """)
+    List<Emp> findByRoleAndAirlineId(
+            @Param("role") CommonEnums.Role role,
+            @Param("airlineId") Long airlineId
+    );
+
+
+    List<Emp> findByAirlineId_AirlineIdAndDepartmentId_DepartmentIdAndEmpStatusAndEmpIdNot(
+            Long airlineId,
+            Long departmentId,
+            CommonEnums.EmpStatus empStatus,
+            String empIdNot
+    );
 }
 

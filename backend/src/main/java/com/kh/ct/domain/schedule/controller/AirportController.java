@@ -5,6 +5,7 @@ import com.kh.ct.domain.schedule.repository.AirportRepository;
 import com.kh.ct.global.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/airports")
 @RequiredArgsConstructor
+@Validated
 public class AirportController {
     
     private final AirportRepository airportRepository;

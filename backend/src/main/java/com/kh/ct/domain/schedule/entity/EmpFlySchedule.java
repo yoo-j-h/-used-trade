@@ -15,7 +15,7 @@ public class EmpFlySchedule extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "emp_fly_schedule_id")
+    @Column(name = "emp_fly_schedule_id") 
     private Long empFlyScheduleId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

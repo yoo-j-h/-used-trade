@@ -53,7 +53,7 @@ public interface LeaveApplyRepository extends JpaRepository<LeaveApply, Long> {
            "WHERE la.leaveApplyApplicant.empId = :empId " +
            "AND la.leaveApplyStatus = 'APPROVED' " +
            "AND YEAR(la.leaveStartDate) = :year")
-    Float calculateUsedLeaveByYear(
+    Double calculateUsedLeaveByYear(
             @Param("empId") String empId,
             @Param("year") int year);
 

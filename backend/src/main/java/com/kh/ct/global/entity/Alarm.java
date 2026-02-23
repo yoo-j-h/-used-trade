@@ -26,4 +26,10 @@ public class Alarm extends BaseTimeEntity{
     @Column(length = 1)
     @Enumerated(EnumType.STRING)
     private CommonEnums.CommonStatus alarmStatus;
+
+    @Column(length = 50)
+    private String alarmType;
+
+    @Column(length = 255)
+    private String alarmLink;
 }

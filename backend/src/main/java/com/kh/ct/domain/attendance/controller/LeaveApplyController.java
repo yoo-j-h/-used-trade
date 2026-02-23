@@ -100,4 +100,17 @@ public class LeaveApplyController {
         List<LeaveDto.ListResponse> response = leaveApplyService.getLeaveApplicationsByStatus(status);
         return ResponseEntity.ok(response);
     }
+    
+    /**
+     * 휴가 신청 상세 조회
+     */
+    @GetMapping("/{leaveApplyId}")
+    public ResponseEntity<LeaveDto.ListResponse> getLeaveDetail(
+            @PathVariable Long leaveApplyId) {
+        
+        log.info("휴가 신청 상세 조회 요청 - leaveApplyId: {}", leaveApplyId);
+        
+        LeaveDto.ListResponse response = leaveApplyService.getLeaveDetail(leaveApplyId);
+        return ResponseEntity.ok(response);
+    }
 }

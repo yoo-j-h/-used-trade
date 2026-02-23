@@ -2,8 +2,10 @@ package com.kh.ct.domain.emp.service;
 
 import com.kh.ct.domain.emp.dto.AirlineDto;
 import com.kh.ct.domain.emp.entity.Airline;
-import com.kh.ct.domain.emp.entity.AirlineStatus;
+import com.kh.ct.domain.emp.entity.Emp;
 import com.kh.ct.domain.emp.repository.AirlineRepository;
+import com.kh.ct.domain.emp.repository.EmpRepository;
+import com.kh.ct.global.common.CommonEnums;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class AirlineServiceImpl implements AirlineService {
 
     private final AirlineRepository airlineRepository;
+    private final EmpRepository empRepository;
 
     @Override
     public List<AirlineDto.ListResponse> getAllTenants() {
@@ -51,8 +54,24 @@ public class AirlineServiceImpl implements AirlineService {
         Airline airline = airlineRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 항공사를 찾을 수 없습니다. ID: " + id));
         
-        AirlineStatus newStatus = AirlineStatus.valueOf(status.toUpperCase());
+        CommonEnums.AirlineStatus newStatus = CommonEnums.AirlineStatus.valueOf(status.toUpperCase());
         airline.updateStatus(newStatus);
+        
+        // 항공사 관리자 계정 상태 업데이트
+        List<Emp> adminEmployees =
+                empRepository.findByAirlineId_AirlineIdAndJob(id, "항공사 관리자");
+        
+        if (newStatus == CommonEnums.AirlineStatus.INACTIVE) {
+            // 계정 정지: 관리자 emp_status를 'S'로 변경
+            for (Emp emp : adminEmployees) {
+                emp.updateEmpStatus(CommonEnums.EmpStatus.S);
+            }
+        } else if (newStatus == CommonEnums.AirlineStatus.ACTIVE) {
+            // 계정 활성화: 관리자 emp_status를 'Y'로 변경
+            for (Emp emp : adminEmployees) {
+                emp.updateEmpStatus(CommonEnums.EmpStatus.Y);
+            }
+        }
     }
 
     // Entity -> DTO 변환 메서드
@@ -68,6 +87,8 @@ public class AirlineServiceImpl implements AirlineService {
                 .activeUsers(activeUsers != null ? activeUsers : 0L)
                 .status(entity.getStatus() != null ? entity.getStatus().name().toLowerCase() : "active")
                 .icon(entity.getIcon() != null ? entity.getIcon() : "✈️")
+                .primaryColor(entity.getPrimaryColor())
+                .secondaryColor(entity.getSecondaryColor())
                 .build();
     }
 
@@ -96,6 +117,8 @@ public class AirlineServiceImpl implements AirlineService {
                 .totalRevenue(calculateTotalRevenue(planPrice, entity.getJoinDate()))
                 .status(entity.getStatus() != null ? entity.getStatus().name().toLowerCase() : "active")
                 .icon(entity.getIcon() != null ? entity.getIcon() : "✈️")
+                .primaryColor(entity.getPrimaryColor())
+                .secondaryColor(entity.getSecondaryColor())
                 .country(entity.getCountry() != null ? entity.getCountry() : "대한민국")
                 .address(entity.getAirlineAddress())
                 .email(entity.getEmail())

@@ -39,5 +39,20 @@ public class CommonEnums {
         SICK,        // 병가
         UNPAID       // 무급
     }
+
+    public enum AttendanceType {
+        NORMAL,      // 정상출근
+        LEAVE,       // 휴가
+        HALF_LEAVE,  // 반차
+        LATE,        // 지각
+        EARLY_LEAVE, // 조퇴
+        ABSENT       // 결근
+    }
+
+    public enum AirlineStatus {
+        ACTIVE,           // 정상 서비스 중
+        PAYMENT_PENDING,  // 결제 대기 중
+        INACTIVE          // 서비스 정지
+    }
 }
 

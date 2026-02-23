@@ -6,9 +6,11 @@ import com.kh.ct.domain.board.repository.BoardFileRepository;
 import com.kh.ct.domain.board.entity.Board;
 import com.kh.ct.domain.board.repository.BoardRepository;
 import com.kh.ct.domain.board.entity.BoardFile;
+import com.kh.ct.domain.emp.entity.Emp;
 import com.kh.ct.domain.emp.repository.EmpRepository;
 import com.kh.ct.global.entity.File;
 import com.kh.ct.global.service.FileService;
+import com.kh.ct.global.service.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,7 @@ public class BoardService {
     private final EmpRepository empRepository;
     private final FileService fileService; // ✅ 주입
     private final BoardFileRepository boardFileRepository;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     // ✅ 게시글 전체 조회 (페이징 적용)
     public Page<Board_ListResponseDto> getAllPosts(String type, String keyword , Pageable pageable) {
@@ -82,6 +85,28 @@ public class BoardService {
                 } catch (IOException e) {
                     // 예외 처리: 실제 서비스 환경에서는 로그를 남기고 사용자에게 알림
                     throw new RuntimeException("파일 저장 중 오류가 발생했습니다: " + multipartFile.getOriginalFilename());
+                }
+            }
+        }
+
+        // 공지사항인 경우 알림 발행
+        if ("공지사항".equals(savedBoard.getBoardType())) {
+            Emp writer = savedBoard.getBoardWriter();
+            if (writer.getAirlineId() != null) {
+                Long airlineId = writer.getAirlineId().getAirlineId();
+                List<Emp> employees = empRepository.findByRoleAndAirlineId(null, airlineId);
+
+                String alarmContent = String.format("새로운 공지사항이 등록되었습니다: %s", savedBoard.getBoardTitle());
+                String alarmType = "BOARD_NOTICE";
+                String alarmLink = "/board/detail/" + savedBoard.getBoardId();
+
+                for (Emp employee : employees) {
+                    notificationEventPublisher.publishNotificationEvent(
+                            employee.getEmpId(),
+                            alarmContent,
+                            alarmType,
+                            alarmLink
+                    );
                 }
             }
         }

@@ -4,7 +4,6 @@ import com.kh.ct.domain.emp.dto.AccountActivationDto;
 import com.kh.ct.domain.emp.entity.ActivationToken;
 import com.kh.ct.domain.emp.entity.Airline;
 import com.kh.ct.domain.emp.entity.AirlineApply;
-import com.kh.ct.domain.emp.entity.AirlineStatus;
 import com.kh.ct.domain.emp.entity.Emp;
 import com.kh.ct.domain.emp.repository.ActivationTokenRepository;
 import com.kh.ct.domain.emp.repository.AirlineApplyRepository;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -132,7 +130,7 @@ public class AccountActivationServiceImpl implements AccountActivationService {
                 .email(request.getRepresentativeEmail()) // 대표 이메일
                 .phone(request.getRepresentativePhone()) // 대표자 번호
                 .plan("Professional") // 기본 플랜
-                .status(AirlineStatus.ACTIVE)
+                .status(CommonEnums.AirlineStatus.ACTIVE)
                 .icon("✈️") // 기본 아이콘
                 .country("대한민국") // 국내 서비스
                 .joinDate(LocalDate.now())

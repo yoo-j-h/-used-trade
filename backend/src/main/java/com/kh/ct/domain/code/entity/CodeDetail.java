@@ -25,4 +25,14 @@ public class CodeDetail extends BaseTimeEntity {
 
     @Lob
     private String codeDesc;
+
+    /**
+     * CodeDetail 수정 메서드 (더티 체킹 방식)
+     * BoardService 스타일: 엔티티의 데이터를 직접 변경
+     */
+    public void update(String codeDetailName, String codeDesc) {
+        this.codeDetailName = codeDetailName;
+        this.codeDesc = codeDesc;
+        // BaseTimeEntity를 상속받고 있어서 updateDate가 자동으로 갱신됩니다.
+    }
 }

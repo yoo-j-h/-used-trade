@@ -1,13 +1,10 @@
 package com.kh.ct.domain.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-public class AuthDto
-{
+public class AuthDto {
+
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
@@ -17,14 +14,23 @@ public class AuthDto
         private String empId;
 
         @NotBlank(message = "비밀번호는 필수입니다")
-        private String empPwd; }
-
+        private String empPwd;
+    }
 
     @Getter
     @AllArgsConstructor
     @Builder
     public static class LoginResponse {
-        private String token;
+        private String accessToken;
+        private Long accessTokenExpiresIn;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @Builder
+    public static class RefreshResponse {
+        private String accessToken;
+        private Long accessTokenExpiresIn;
     }
 
     @Getter

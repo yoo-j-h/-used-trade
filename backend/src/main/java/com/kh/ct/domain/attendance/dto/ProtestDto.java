@@ -24,7 +24,9 @@ public class ProtestDto {
     @AllArgsConstructor
     @Builder
     public static class ApplyRequest {
-        private Long attendanceId;              // 정정 대상 근태 ID
+        private Long attendanceId;              // 정정 대상 근태 ID (기존 근태가 있는 경우)
+        private String attendanceDate;          // 정정 대상 날짜 (근태 기록이 없는 경우)
+        private String attendanceType;          // 근무 유형 (NORMAL, LEAVE, HALF_LEAVE)
         private String protestRequestInTime;    // 정정 요청 출근 시간 (HH:mm)
         private String protestRequestOutTime;   // 정정 요청 퇴근 시간 (HH:mm)
         private String protestReason;           // 정정 사유
@@ -47,8 +49,10 @@ public class ProtestDto {
         private LocalTime protestRequestOutTime;    // 정정 요청 퇴근 시간
         private String protestReason;               // 정정 사유
         private String status;                      // 신청 상태 (PENDING/APPROVED/REJECTED)
+        private String attendanceType;              // 근무 유형
         private String applicantName;               // 신청자 이름
         private String approverName;                // 승인자 이름
+        private String cancelReason;                // 반려 사유
         private LocalDateTime createdDate;          // 신청일
         private Integer fileCount;                  // 첨부 파일 개수
     }
@@ -70,9 +74,10 @@ public class ProtestDto {
         private LocalTime protestRequestOutTime;    // 정정 요청 퇴근 시간
         private String protestReason;               // 정정 사유
         private String status;                      // 신청 상태
+        private String attendanceType;              // 근무 유형
+        private String cancelReason;                // 반려 사유
         private String applicantName;               // 신청자 이름
         private String approverName;                // 승인자 이름
-        private String cancelReason;                // 반려 사유
         private LocalDateTime createdDate;          // 신청일
         private List<FileInfo> files;               // 첨부 파일 목록
     }
@@ -127,5 +132,20 @@ public class ProtestDto {
         private String approverName;                   // 승인자 이름
         private Integer fileCount;                     // 첨부 파일 개수
         private LocalDateTime createdDate;             // 신청일
+    }
+
+    /**
+     * OCR 응답 DTO
+     * 이미지에서 추출된 구조화된 데이터
+     */
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class OcrResponse {
+        private String targetDate;    // 정정일자 (YYYY-MM-DD)
+        private String updateTime;    // 출퇴근시간 (HH:mm)
+        private String reason;        // 사유
+        private String fileName;      // 원본 파일명
     }
 }

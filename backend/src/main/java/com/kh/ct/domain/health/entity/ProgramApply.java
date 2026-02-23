@@ -49,4 +49,15 @@ public class ProgramApply extends BaseTimeEntity {
     @OneToOne(mappedBy = "programApply",
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Program program;
+
+    // === 비즈니스 로직 ===
+    public void approve(Emp manager) {
+        this.programApplyManager = manager;
+        this.programApplyStatus = CommonEnums.ApplyStatus.APPROVED;
+    }
+
+    public void reject(String reason) {
+        this.programApplyCancelReason = reason;
+        this.programApplyStatus = CommonEnums.ApplyStatus.REJECTED;
+    }
 }

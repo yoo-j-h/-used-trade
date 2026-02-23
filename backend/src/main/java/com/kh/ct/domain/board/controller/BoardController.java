@@ -36,7 +36,6 @@ public class BoardController {
     // 새 글 등록
     @PostMapping(value = "/write", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Long> writePost(@ModelAttribute Board_RequestDto dto) throws IOException {
-        // 여기서 dto.getFiles()를 찍어보시면 파일 리스트가 들어와 있을 거예요.
         return ResponseEntity.ok(boardService.createPost(dto));
     }
 

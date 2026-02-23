@@ -35,7 +35,7 @@ public class Dashboard_TotalResponseDto {
         private String empId;
         private String empName;
         private String role;
-        private Float leaveCount;
+        private Double leaveCount;
         private String empNo;
 
         public EmpInfo(Emp emp) {
@@ -59,8 +59,8 @@ public class Dashboard_TotalResponseDto {
         public AttendanceInfo(Attendance attendance) {
             this.attendanceId = attendance.getAttendanceId();
             this.attendanceDate = attendance.getAttendanceDate();
-            this.attendanceStatus = attendance.getAttendanceStatus() != null ?
-                    attendance.getAttendanceStatus().name() : null;
+            this.attendanceStatus = attendance.getAttendanceStatus() != null ? attendance.getAttendanceStatus().name()
+                    : null;
             this.inTime = attendance.getInTime();
         }
     }
@@ -85,11 +85,14 @@ public class Dashboard_TotalResponseDto {
             this.flightNumber = flySchedule.getFlightNumber();
             this.departure = flySchedule.getDeparture();
             this.destination = flySchedule.getDestination();
-            this.flightStatus = flySchedule.getFlightStatus() != null ? flySchedule.getFlightStatus().name() : "SCHEDULED";
+            this.flightStatus = flySchedule.getFlightStatus() != null ? flySchedule.getFlightStatus().name()
+                    : "SCHEDULED";
             this.airplaneType = flySchedule.getAirplaneType();
             this.gate = flySchedule.getGate();
-            if (flySchedule.getFlyStartTime() != null) this.flyStartTime = flySchedule.getFlyStartTime().format(formatter);
-            if (flySchedule.getFlyEndTime() != null) this.flyEndTime = flySchedule.getFlyEndTime().format(formatter);
+            if (flySchedule.getFlyStartTime() != null)
+                this.flyStartTime = flySchedule.getFlyStartTime().format(formatter);
+            if (flySchedule.getFlyEndTime() != null)
+                this.flyEndTime = flySchedule.getFlyEndTime().format(formatter);
         }
     }
 
@@ -135,7 +138,8 @@ public class Dashboard_TotalResponseDto {
         }
 
         private String decode(String code) {
-            if (code == null) return "프로그램";
+            if (code == null)
+                return "프로그램";
             return switch (code) {
                 case "STRESS_CARE" -> "스트레스 상담";
                 case "PHYSICAL_TRAINING" -> "체력 교육";

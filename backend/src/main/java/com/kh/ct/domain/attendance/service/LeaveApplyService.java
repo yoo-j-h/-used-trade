@@ -38,4 +38,9 @@ public interface LeaveApplyService {
      * 관리자용 상태별 휴가 신청 목록 조회
      */
     List<LeaveDto.ListResponse> getLeaveApplicationsByStatus(String status);
+    
+    /**
+     * 휴가 신청 상세 조회
+     */
+    LeaveDto.ListResponse getLeaveDetail(Long leaveApplyId);
 }

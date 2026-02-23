@@ -65,6 +65,11 @@ public class ProtestApply extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private CommonEnums.AttendanceStatus originalAttendanceStatus;
 
+    // 근무 유형 (정상출근, 휴가, 반차)
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private CommonEnums.AttendanceType attendanceType;
+
     @OneToMany(mappedBy = "protestApplyId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProtestApplyFile> files = new ArrayList<>();
 

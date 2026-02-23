@@ -21,13 +21,13 @@ public class FlySchedule extends BaseTimeEntity {
 
     /**
      * ALL_SCHEDULE 과 1:1
-     * 같은 PK를 공유하지만 MapsId는 쓰지 않음 (지금 구조에선 불필요 + 위험)
+     * 같은 PK를 공유하지만 MapsId는 쓰지 않음
      */
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "fly_schedule_id", referencedColumnName = "schedule_id")
     private AllSchedule schedule;
 
-    @Column(name = "airline_id", nullable = false)
+    @Column(name = "airline_id", nullable = true)
     private Long airlineId;
 
     @Column(name = "flight_number", length = 20)
@@ -55,7 +55,7 @@ public class FlySchedule extends BaseTimeEntity {
     private Long crewCount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "flight_status", nullable = false)
+    @Column(name = "flight_status", nullable = true)
     private CommonEnums.flightStatus flightStatus;
 
     @Column(name = "seat_count")

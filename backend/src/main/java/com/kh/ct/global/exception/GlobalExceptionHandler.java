@@ -58,6 +58,13 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(ex.getMessage()));
     }
 
+    // AccessDeniedException 처리 (403)
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ex.getMessage()));
+    }
+
     // RuntimeException 처리 (500)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {

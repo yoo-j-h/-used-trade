@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+
+import java.util.List;
+import com.kh.ct.domain.emp.dto.AirlineDto;
 
 @RestController
 @RequestMapping("/api/emps")
@@ -46,6 +50,69 @@ public class EmpController {
         return ResponseEntity.ok(EmpDto.RegisterResponse.from(created));
     }
 
+
+    /**
+     * 관리자(담당자) 후보 리스트 조회
+     */
+    @GetMapping("/managers")
+    public ResponseEntity<ApiResponse<List<EmpDto>>> getManagerCandidates() {
+        java.util.List<EmpDto> managers = empService.getManagerCandidates();
+        return ResponseEntity.ok(ApiResponse.success("관리자 후보 조회 성공", managers));
+    }
+
+    /**
+     * 직원 목록 조회 (역할별 필터링 가능)
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<EmpDto.EmployeeListItem>>> getEmployees(
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long airlineId
+    ) {
+        List<EmpDto.EmployeeListItem> employees = empService.getEmployees(role, airlineId);
+        return ResponseEntity.ok(ApiResponse.success("직원 목록 조회 성공", employees));
+    }
+
+    /**
+     * 직원 직급/직책 수정
+     */
+    @PatchMapping("/{empId}/role-job")
+    public ResponseEntity<ApiResponse<EmpDto>> updateEmpRoleAndJob(
+            @PathVariable String empId,
+            @Valid @RequestBody EmpDto.UpdateRoleAndJobRequest request
+    ) {
+        EmpDto updatedEmp = empService.updateEmpRoleAndJob(empId, request);
+        return ResponseEntity.ok(ApiResponse.success("직급/직책 수정 성공", updatedEmp));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<EmpDto>> getMyProfile(Authentication authentication) {
+        String empId = authentication.getName();
+        EmpDto empDetail = empService.getEmpDetail(empId); // 기존 변환 로직 재사용
+        return ResponseEntity.ok(ApiResponse.success("내 프로필 조회 성공", empDetail));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<EmpDto>> updateMyProfile(
+            Authentication authentication,
+            @Valid @RequestBody EmpDto.UpdateMyProfileRequest request
+    ) {
+        String empId = authentication.getName();
+        EmpDto updated = empService.updateMyProfile(empId, request);
+        return ResponseEntity.ok(ApiResponse.success("내 프로필 수정 성공", updated));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(
+            Authentication authentication,
+            @Valid @RequestBody EmpDto.ChangeMyPasswordRequest req
+    ) {
+        String empId = authentication.getName();
+        // ⚠️ authentication.getName()이 empId가 맞다는 전제 (대부분 subject로 empId 넣으면 맞음)
+
+        empService.changeMyPassword(empId, req.getCurrentPassword(), req.getNewPassword());
+        return ResponseEntity.ok().build();
+    }
+
     /**
      * 직원 상세 정보 조회
      */
@@ -53,5 +120,32 @@ public class EmpController {
     public ResponseEntity<ApiResponse<EmpDto>> getEmpDetail(@PathVariable String empId) {
         EmpDto empDetail = empService.getEmpDetail(empId);
         return ResponseEntity.ok(ApiResponse.success("직원 상세 정보 조회 성공", empDetail));
+    }
+
+    /**
+     * 직원의 항공사 정보 조회 (테마 적용용)
+     */
+    @GetMapping("/{empId}/airline")
+    public ResponseEntity<ApiResponse<AirlineDto.DetailResponse>> getEmpAirline(@PathVariable String empId) {
+       AirlineDto.DetailResponse airlineInfo = empService.getAirlineByEmpId(empId);
+        return ResponseEntity.ok(ApiResponse.success("항공사 정보 조회 성공", airlineInfo));
+    }
+
+    /**
+     * 내 항공사 정보 조회 (보안 강화)
+     */
+    @GetMapping("/me/airline")
+    public ResponseEntity<ApiResponse<AirlineDto.DetailResponse>> getMyAirline(Authentication authentication) {
+        String empId = authentication.getName();
+        AirlineDto.DetailResponse airlineInfo = empService.getAirlineByEmpId(empId);
+        return ResponseEntity.ok(ApiResponse.success("내 항공사 정보 조회 성공", airlineInfo));
+    }
+    /** 아이디 찾기 */
+    @PostMapping("/findId")
+    public ResponseEntity<ApiResponse<EmpDto.FindIdResponse>> findEmpId(
+            @Valid @RequestBody EmpDto.FindIdRequest request
+    ) {
+        EmpDto.FindIdResponse result = empService.findEmpId(request);
+        return ResponseEntity.ok(ApiResponse.success("아이디 찾기 성공", result));
     }
 }

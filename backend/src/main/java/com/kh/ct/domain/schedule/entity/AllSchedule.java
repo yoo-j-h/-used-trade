@@ -22,4 +22,10 @@ public class AllSchedule extends BaseTimeEntity {
     @Column(name = "schedule_code", length = 20, nullable = false)
     private String scheduleCode; // FLIGHT, COUNSEL, EXERCISE, REST 같은 형태 추천
 
+    @Column(name = "start_date")
+    private java.time.LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private java.time.LocalDateTime endDate;
+
 }

@@ -40,12 +40,13 @@ public class LeaveDto {
         private String leaveType;
         private LocalDateTime startDate;
         private LocalDateTime endDate;
-        private Float leaveDays;
+        private Double leaveDays;
         private String reason;
         private String status;  // PENDING, APPROVED, REJECTED
         private String applicantName;
         private String departmentName;  // 부서명 추가
         private String approverName;
+        private String cancelReason;  // 반려 사유
         private LocalDateTime createdDate;
     }
 
@@ -69,9 +70,9 @@ public class LeaveDto {
     @AllArgsConstructor
     @Builder
     public static class RemainingLeaveResponse {
-        private Float totalLeave;      // 전체 휴가
-        private Float usedLeave;        // 사용 휴가
-        private Float remainingLeave;   // 잔여 휴가
+        private Double totalLeave;      // 전체 휴가
+        private Double usedLeave;        // 사용 휴가
+        private Double remainingLeave;   // 잔여 휴가
         private Integer usagePercentage; // 사용률
     }
 }

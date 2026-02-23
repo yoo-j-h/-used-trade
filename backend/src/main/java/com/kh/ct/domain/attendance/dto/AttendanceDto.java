@@ -170,7 +170,7 @@ public class AttendanceDto {
         private String startDate;
         private String endDate;
         private String requestDate;
-        private Float leaveDays;
+        private Double leaveDays;
     }
 
     /**

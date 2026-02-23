@@ -1,5 +1,6 @@
 package com.kh.ct.domain.emp.entity;
 
+import com.kh.ct.global.common.CommonEnums;
 import com.kh.ct.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,6 +28,12 @@ public class Airline extends BaseTimeEntity {
     @Column(length = 100)
     private String theme;
 
+    @Column(length = 7)
+    private String primaryColor;
+
+    @Column(length = 7)
+    private String secondaryColor;
+
     @Column(length = 50)
     private String mainNumber;
 
@@ -35,6 +42,9 @@ public class Airline extends BaseTimeEntity {
 
     @Column(length = 500)
     private String airlineDesc;
+    
+    @Column(length = 50)
+    private String businessNumber;
 
     // 테넌트 관리 필드
     @Column(length = 50)
@@ -42,7 +52,7 @@ public class Airline extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private AirlineStatus status; // ACTIVE, PAYMENT_PENDING, INACTIVE
+    private CommonEnums.AirlineStatus status; // ACTIVE, PAYMENT_PENDING, INACTIVE
 
     @Column(length = 10)
     private String icon;
@@ -74,7 +84,7 @@ public class Airline extends BaseTimeEntity {
     private List<AirlineAirport> airlineAirports = new ArrayList<>();
 
     // 비즈니스 로직 메서드
-    public void updateStatus(AirlineStatus newStatus) {
+    public void updateStatus(CommonEnums.AirlineStatus newStatus) {
         this.status = newStatus;
     }
 
